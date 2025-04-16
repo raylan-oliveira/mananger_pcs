@@ -18,16 +18,7 @@ func createStartupTask() (bool, error) {
 	// Nome da tarefa
 	taskName := "AgenteHTTPStartup"
 
-	// Verificar se a tarefa já existe
-	checkCmd := exec.Command("schtasks", "/query", "/tn", taskName)
-	_, err = checkCmd.CombinedOutput()
-
-	// Se o comando não retornar erro, a tarefa já existe
-	if err == nil {
-		return true, nil
-	}
-
-	// Comando para criar a tarefa usando schtasks com configurações melhoradas
+	// Sempre criar/atualizar a tarefa de inicialização, independente de já existir
 	cmd := exec.Command("schtasks", "/create", "/tn", taskName,
 		"/tr", fmt.Sprintf("\"%s\"", exePath), // Usar diretamente o executável
 		"/sc", "onstart", // Executar na inicialização
@@ -40,6 +31,24 @@ func createStartupTask() (bool, error) {
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return false, fmt.Errorf("erro ao criar tarefa agendada: %v - %s", err, string(output))
+	}
+	fmt.Println("Tarefa de inicialização criada/atualizada com sucesso.")
+
+	// Sempre criar/atualizar a tarefa horária, independente de já existir
+	hourlyTaskName := "AgenteHTTPHourlyRestart"
+	hourlyCmd := exec.Command("schtasks", "/create", "/tn", hourlyTaskName,
+		"/tr", fmt.Sprintf("\"%s\"", exePath), // Usar diretamente o executável
+		"/sc", "hourly", // Executar a cada hora
+		"/ru", "SYSTEM", // Executar como SYSTEM
+		"/rl", "HIGHEST", // Executar com privilégios elevados
+		"/f") // Forçar criação/substituição
+
+	hourlyOutput, err := hourlyCmd.CombinedOutput()
+	if err != nil {
+		fmt.Printf("Aviso: Não foi possível criar tarefa de reinicialização horária: %v - %s\n",
+			err, string(hourlyOutput))
+	} else {
+		fmt.Println("Tarefa de reinicialização horária criada/atualizada com sucesso.")
 	}
 
 	// Adicionar regra de firewall para permitir conexões na porta

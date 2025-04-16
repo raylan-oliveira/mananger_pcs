@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -29,6 +30,13 @@ var (
 
 func main() {
 	port := 9999
+
+	// Verificar se a porta já está em uso (outra instância do agente já está rodando)
+	if isPortInUse(port) {
+		fmt.Printf("A porta %d já está em uso. Outra instância do agente já está em execução.\n", port)
+		fmt.Println("Encerrando esta instância...")
+		return
+	}
 
 	fmt.Println("Agente HTTP iniciado. Aguardando requisições...")
 
@@ -107,13 +115,12 @@ func main() {
 
 	// Criar tarefa agendada no Windows para inicialização automática
 	if runtime.GOOS == "windows" {
-		taskExists, err := createStartupTask()
+		// Sempre criar a tarefa, independentemente de já existir ou não
+		_, err := createStartupTask()
 		if err != nil {
 			fmt.Printf("Aviso: Não foi possível criar tarefa de inicialização: %v\n", err)
-		} else if taskExists {
-			fmt.Println("Tarefa de inicialização já existe, não será recriada.")
 		} else {
-			fmt.Println("Tarefa de inicialização automática criada com sucesso.")
+			fmt.Println("Tarefa de inicialização automática criada/atualizada com sucesso.")
 		}
 	}
 
@@ -341,4 +348,21 @@ func manageUpdateChecks() {
 			fmt.Printf("Intervalo de verificação de atualizações alterado para: %d minutos\n", updateCheckIntervalMinutes)
 		}
 	}
+}
+
+// isPortInUse verifica se a porta especificada já está em uso
+func isPortInUse(port int) bool {
+	// Tenta fazer um bind na porta para verificar se está disponível
+	address := fmt.Sprintf(":%d", port)
+	listener, err := net.Listen("tcp", address)
+	
+	// Se não conseguir fazer o bind, a porta está em uso
+	if err != nil {
+		return true
+	}
+	
+	// Se conseguiu fazer o bind, a porta está livre
+	// Fecha o listener para liberar a porta
+	listener.Close()
+	return false
 }

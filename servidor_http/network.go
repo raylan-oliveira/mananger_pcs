@@ -189,3 +189,54 @@ func incrementIP(ip net.IP) {
 		}
 	}
 }
+
+// Função para obter múltiplas redes locais
+func getMultipleNetworks() ([]string, error) {
+	// Primeiro, obter a rede atual
+	currentNetwork, err := getLocalNetwork()
+	if err != nil {
+		return nil, err
+	}
+	
+	// Extrair o terceiro octeto da rede atual (assumindo uma máscara /24)
+	parts := strings.Split(currentNetwork, ".")
+	if len(parts) != 4 {
+		return []string{currentNetwork}, nil
+	}
+	
+	// Remover a parte CIDR para obter apenas o terceiro octeto
+	thirdOctetWithMask := parts[2]
+	thirdOctet := strings.Split(thirdOctetWithMask, "/")[0]
+	
+	// Converter para inteiro
+	var octet int
+	_, err = fmt.Sscanf(thirdOctet, "%d", &octet)
+	if err != nil {
+		return []string{currentNetwork}, nil
+	}
+	
+	// Gerar redes adicionais (2 acima e 2 abaixo)
+	networks := []string{}
+	
+	// Base da rede (primeiros dois octetos)
+	baseNetwork := fmt.Sprintf("%s.%s", parts[0], parts[1])
+	
+	// Adicionar redes abaixo (se possível)
+	for i := 2; i > 0; i-- {
+		if octet-i >= 0 {
+			networks = append(networks, fmt.Sprintf("%s.%d.0/24", baseNetwork, octet-i))
+		}
+	}
+	
+	// Adicionar rede atual
+	networks = append(networks, currentNetwork)
+	
+	// Adicionar redes acima
+	for i := 1; i <= 2; i++ {
+		if octet+i <= 255 {
+			networks = append(networks, fmt.Sprintf("%s.%d.0/24", baseNetwork, octet+i))
+		}
+	}
+	
+	return networks, nil
+}

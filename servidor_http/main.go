@@ -11,19 +11,20 @@ import (
 
 func main() {
 	// Configurações
-	// Obtendo a rede dinamicamente
-	rede, err := getLocalNetwork()
+	// Obtendo múltiplas redes
+	redes, err := getMultipleNetworks()
 	if err != nil {
-		fmt.Printf("Aviso: Não foi possível determinar a rede local: %v\n", err)
-		rede = "192.168.1.0/24" // Usando rede padrão como fallback
-		fmt.Printf("Usando rede padrão: %s\n", rede)
+		fmt.Printf("Aviso: Não foi possível determinar as redes: %v\n", err)
+		redes = []string{"192.168.1.0/24"} // Usando rede padrão como fallback
+		fmt.Printf("Usando rede padrão: %s\n", redes[0])
 	}
+	
 	port := 9999
 	intervaloConsulta := 300 * time.Second // 5 minutos
 	maxWorkers := 25
 
 	fmt.Println("=== Servidor de Monitoramento HTTP ===")
-	fmt.Printf("Monitorando a rede: %s\n", rede)
+	fmt.Printf("Monitorando as redes: %s\n", strings.Join(redes, ", "))
 	fmt.Printf("Intervalo de consulta: %s\n", intervaloConsulta)
 
 	// Verificando se o diretório de chaves existe
@@ -61,9 +62,19 @@ func main() {
 		fmt.Println("\nIniciando descoberta de agentes...")
 		inicio := time.Now()
 
-		agentes := descobrirAgentes(rede, port, maxWorkers)
+		// Descobrir agentes em todas as redes
+		agentes := make(map[string]map[string]interface{})
+		for _, rede := range redes {
+			fmt.Printf("\nEscaneando rede: %s\n", rede)
+			agentesRede := descobrirAgentes(rede, port, maxWorkers)
+			
+			// Adicionar ao mapa principal
+			for ip, info := range agentesRede {
+				agentes[ip] = info
+			}
+		}
 
-		fmt.Printf("\nAgentes encontrados: %d\n", len(agentes))
+		fmt.Printf("\nTotal de agentes encontrados: %d\n", len(agentes))
 		for ip, info := range agentes {
 			fmt.Printf("\nIP: %s\n", ip)
 

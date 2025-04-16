@@ -72,6 +72,9 @@ func createTables(db *sql.DB) error {
 			ram_total REAL,
 			disk_c_total REAL,
 			agent_version TEXT,
+			servidor_atualizacao TEXT,
+			system_info_update_interval INTEGER,
+			update_check_interval INTEGER,
 			last_seen TIMESTAMP,
 			first_seen TIMESTAMP
 		)
@@ -152,8 +155,9 @@ func saveComputerInfo(info map[string]interface{}, ip string) error {
 	}
 
 	// Extrair outros dados
-	var hostname, osName, cpuModel, agentVersion string
+	var hostname, osName, cpuModel, agentVersion, servidorAtualizacao string
 	var ramTotal, diskCTotal float64
+	var systemInfoUpdateInterval, updateCheckInterval int
 
 	// Extrair hostname
 	if sistema, ok := info["sistema"].(map[string]interface{}); ok {
@@ -186,7 +190,7 @@ func saveComputerInfo(info map[string]interface{}, ip string) error {
 			if !ok {
 				continue
 			}
-			
+
 			if dispositivo, ok := disco["dispositivo"].(string); ok && dispositivo == "C:" {
 				if total, ok := disco["total_gb"].(float64); ok {
 					diskCTotal = total
@@ -196,11 +200,55 @@ func saveComputerInfo(info map[string]interface{}, ip string) error {
 		}
 	}
 
-	// Extrair versão do agente
+	// Extrair versão do agente e configurações adicionais
 	if agente, ok := info["agente"].(map[string]interface{}); ok {
 		if versao, ok := agente["versao_agente"].(string); ok {
 			agentVersion = versao
 		}
+
+		// Extrair servidor de atualização
+		if servidor, ok := agente["servidor_atualizacao"].(string); ok {
+			servidorAtualizacao = servidor
+		}
+
+		// Extrair intervalos de atualização - corrigindo a extração para lidar com diferentes tipos numéricos
+		if infoInterval, ok := agente["system_info_update_interval"]; ok {
+			switch v := infoInterval.(type) {
+			case float64:
+				systemInfoUpdateInterval = int(v)
+			case int:
+				systemInfoUpdateInterval = v
+			case int64:
+				systemInfoUpdateInterval = int(v)
+			case string:
+				// Tentar converter string para int
+				var intVal int
+				if _, err := fmt.Sscanf(v, "%d", &intVal); err == nil {
+					systemInfoUpdateInterval = intVal
+				}
+			}
+		}
+
+		if updateInterval, ok := agente["update_check_interval"]; ok {
+			switch v := updateInterval.(type) {
+			case float64:
+				updateCheckInterval = int(v)
+			case int:
+				updateCheckInterval = v
+			case int64:
+				updateCheckInterval = int(v)
+			case string:
+				// Tentar converter string para int
+				var intVal int
+				if _, err := fmt.Sscanf(v, "%d", &intVal); err == nil {
+					updateCheckInterval = intVal
+				}
+			}
+		}
+
+		// Adicionar log para debug
+		fmt.Printf("Valores extraídos: servidor_atualizacao=%s, system_info_update_interval=%d, update_check_interval=%d\n",
+			servidorAtualizacao, systemInfoUpdateInterval, updateCheckInterval)
 	}
 
 	now := time.Now()
@@ -227,9 +275,11 @@ func saveComputerInfo(info map[string]interface{}, ip string) error {
 		_, err = tx.Exec(`
 			UPDATE computers 
 			SET hostname = ?, ip_address = ?, os_name = ?, cpu_model = ?, 
-				ram_total = ?, disk_c_total = ?, agent_version = ?, last_seen = ?
+				ram_total = ?, disk_c_total = ?, agent_version = ?, last_seen = ?,
+				servidor_atualizacao = ?, system_info_update_interval = ?, update_check_interval = ?
 			WHERE mac_address = ?
-		`, hostname, ip, osName, cpuModel, ramTotal, diskCTotal, agentVersion, now, macAddress)
+		`, hostname, ip, osName, cpuModel, ramTotal, diskCTotal, agentVersion, now,
+			servidorAtualizacao, systemInfoUpdateInterval, updateCheckInterval, macAddress)
 		if err != nil {
 			return fmt.Errorf("erro ao atualizar computador: %v", err)
 		}
@@ -237,9 +287,12 @@ func saveComputerInfo(info map[string]interface{}, ip string) error {
 		// Inserir novo registro
 		_, err = tx.Exec(`
 			INSERT INTO computers 
-			(mac_address, hostname, ip_address, os_name, cpu_model, ram_total, disk_c_total, agent_version, last_seen, first_seen)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-		`, macAddress, hostname, ip, osName, cpuModel, ramTotal, diskCTotal, agentVersion, now, now)
+			(mac_address, hostname, ip_address, os_name, cpu_model, ram_total, disk_c_total, 
+			 agent_version, last_seen, first_seen, servidor_atualizacao, 
+			 system_info_update_interval, update_check_interval)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		`, macAddress, hostname, ip, osName, cpuModel, ramTotal, diskCTotal,
+			agentVersion, now, now, servidorAtualizacao, systemInfoUpdateInterval, updateCheckInterval)
 		if err != nil {
 			return fmt.Errorf("erro ao inserir computador: %v", err)
 		}
@@ -291,7 +344,8 @@ func saveComputerInfo(info map[string]interface{}, ip string) error {
 func getAllComputers() ([]map[string]interface{}, error) {
 	rows, err := db.Query(`
 		SELECT mac_address, hostname, ip_address, os_name, cpu_model, 
-			   ram_total, disk_c_total, agent_version, last_seen, first_seen
+			   ram_total, disk_c_total, agent_version, last_seen, first_seen,
+			   servidor_atualizacao, system_info_update_interval, update_check_interval
 		FROM computers
 		ORDER BY hostname
 	`)
@@ -302,26 +356,31 @@ func getAllComputers() ([]map[string]interface{}, error) {
 
 	var computers []map[string]interface{}
 	for rows.Next() {
-		var mac, hostname, ip, os, cpu, agentVersion string
+		var mac, hostname, ip, os, cpu, agentVersion, servidorAtualizacao string
 		var ram, disk float64
 		var lastSeen, firstSeen time.Time
+		var systemInfoUpdateInterval, updateCheckInterval int
 
-		err := rows.Scan(&mac, &hostname, &ip, &os, &cpu, &ram, &disk, &agentVersion, &lastSeen, &firstSeen)
+		err := rows.Scan(&mac, &hostname, &ip, &os, &cpu, &ram, &disk, &agentVersion,
+			&lastSeen, &firstSeen, &servidorAtualizacao, &systemInfoUpdateInterval, &updateCheckInterval)
 		if err != nil {
 			return nil, fmt.Errorf("erro ao ler dados do computador: %v", err)
 		}
 
 		computer := map[string]interface{}{
-			"mac_address":   mac,
-			"hostname":      hostname,
-			"ip_address":    ip,
-			"os_name":       os,
-			"cpu_model":     cpu,
-			"ram_total":     ram,
-			"disk_c_total":  disk,
-			"agent_version": agentVersion,
-			"last_seen":     lastSeen.Format("2006-01-02 15:04:05"),
-			"first_seen":    firstSeen.Format("2006-01-02 15:04:05"),
+			"mac_address":                 mac,
+			"hostname":                    hostname,
+			"ip_address":                  ip,
+			"os_name":                     os,
+			"cpu_model":                   cpu,
+			"ram_total":                   ram,
+			"disk_c_total":                disk,
+			"agent_version":               agentVersion,
+			"last_seen":                   lastSeen.Format("2006-01-02 15:04:05"),
+			"first_seen":                  firstSeen.Format("2006-01-02 15:04:05"),
+			"servidor_atualizacao":        servidorAtualizacao,
+			"system_info_update_interval": systemInfoUpdateInterval,
+			"update_check_interval":       updateCheckInterval,
 		}
 
 		computers = append(computers, computer)
