@@ -10,3 +10,28 @@
 [2025-04-15 14:40:21] Tamanho do arquivo baixado: 16136192 bytes
 [2025-04-15 14:40:21] Reiniciando aplicativo após atualização...
 [2025-04-15 14:40:21] Aplicativo reiniciado com sucesso, PID: 21824
+[2025-04-15 20:36:32] Erro ao acessar servidor de atualizações: Get "http://10.46.102.245:9991/version.txt": dial tcp 10.46.102.245:9991: connectex: Uma tentativa de conexão falhou porque o componente conectado não respondeu
+corretamente após um período de tempo ou a conexão estabelecida falhou
+porque o host conectado não respondeu.
+[2025-04-15 20:40:16] Erro ao acessar servidor de atualizações: Get "http://192.168.1.5:9991/version.txt": dial tcp 192.168.1.5:9991: connectex: Nenhuma conexão pôde ser feita porque a máquina de destino as recusou ativamente.
+[2025-04-15 20:41:05] Diretório do executável: C:\Users\ray\Dropbox\Dev\mananger_pcs\agente_http
+[2025-04-15 20:41:05] Renomeando executável atual para backup: C:\Users\ray\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe -> C:\Users\ray\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~
+[2025-04-15 20:41:05] Baixando nova versão do executável de http://192.168.1.5:9991/agente_http.exe
+[2025-04-15 20:41:06] Baixando chave pública atualizada...
+[2025-04-15 20:41:06] Baixando arquivo de versão...
+[2025-04-15 20:41:06] Fechando servidor HTTP para liberar a porta...
+[2025-04-15 20:41:06] Iniciando nova versão do aplicativo...
+[2025-04-15 20:41:06] Nova versão iniciada com sucesso. Encerrando versão atual...
+[2025-04-15 20:41:06] Reiniciando aplicativo após atualização...
+[2025-04-15 20:41:06] Iniciando download da versão 0.0.30 de http://192.168.1.5:9991/agente_http.exe
+[2025-04-15 20:41:07] Conectividade com o servidor confirmada
+[2025-04-15 20:41:07] Iniciando requisição HTTP para download do executável
+[2025-04-15 20:41:07] Resposta do servidor: Status 200
+[2025-04-15 20:41:07] Content-Type do arquivo: application/x-msdownload
+[2025-04-15 20:41:07] Caminho do executável atual: C:\Users\ray\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe
+[2025-04-15 20:41:07] Aviso: O executável atual parece estar bloqueado: open C:\Users\ray\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe: O arquivo já está sendo usado por outro processo.
+[2025-04-15 20:41:07] Criando arquivo temporário: C:\Users\ray\AppData\Local\Temp\agente_http_update_1744764067033724300.exe
+[2025-04-15 20:41:07] Download concluído. Bytes escritos: 16135680
+[2025-04-15 20:41:07] Tamanho do arquivo baixado: 16136192 bytes
+[2025-04-15 20:41:07] Reiniciando aplicativo após atualização...
+[2025-04-15 20:41:07] Aplicativo reiniciado com sucesso, PID: 19116

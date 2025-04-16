@@ -57,7 +57,7 @@ func getSystemInfoData() map[string]interface{} {
 		if hostName, ok := rawSystemInfo["Nome do host"]; ok {
 			info["nome_host"] = hostName
 		}
-		info["ray"] = "RAylan_Oliveira"
+		info["ray"] = "deu certo"
 		if osName, ok := rawSystemInfo["Nome do sistema operacional"]; ok {
 			info["nome_so"] = osName
 		}

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
-	
+
 	// Replace go-sqlite3 with a pure Go implementation
 	_ "modernc.org/sqlite"
 )
@@ -18,7 +18,7 @@ func initDatabase() error {
 	if err != nil {
 		return fmt.Errorf("erro ao abrir banco de dados: %v", err)
 	}
-	
+
 	// Criar tabela system_info se não existir
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS system_info (
@@ -30,7 +30,7 @@ func initDatabase() error {
 	if err != nil {
 		return fmt.Errorf("erro ao criar tabela system_info: %v", err)
 	}
-	
+
 	// Criar tabela config se não existir
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS config (
@@ -41,7 +41,7 @@ func initDatabase() error {
 	if err != nil {
 		return fmt.Errorf("erro ao criar tabela config: %v", err)
 	}
-	
+
 	// Inserir versão inicial se não existir
 	_, err = db.Exec(`
 		INSERT OR IGNORE INTO config (key, value) VALUES ('version', '1.0.0')
@@ -49,15 +49,15 @@ func initDatabase() error {
 	if err != nil {
 		return fmt.Errorf("erro ao inserir versão inicial: %v", err)
 	}
-	
+
 	// Inserir IP de atualização padrão se não existir
 	_, err = db.Exec(`
-		INSERT OR IGNORE INTO config (key, value) VALUES ('ip_atualizacao', 'http://10.46.102.245:9991')
+		INSERT OR IGNORE INTO config (key, value) VALUES ('ip_atualizacao', 'http://192.168.1.5:9991')
 	`)
 	if err != nil {
 		return fmt.Errorf("erro ao inserir IP de atualização padrão: %v", err)
 	}
-	
+
 	return nil
 }
 
@@ -89,19 +89,19 @@ func closeDatabase() {
 func getSystemInfoFromDB() (SystemInfo, error) {
 	var info SystemInfo
 	var infoJSON string
-	
+
 	// Obter a entrada mais recente
 	err := db.QueryRow("SELECT info FROM system_info ORDER BY timestamp DESC LIMIT 1").Scan(&infoJSON)
 	if err != nil {
 		return info, err
 	}
-	
+
 	// Deserializar JSON para struct
 	err = json.Unmarshal([]byte(infoJSON), &info)
 	if err != nil {
 		return info, fmt.Errorf("erro ao deserializar JSON: %v", err)
 	}
-	
+
 	return info, nil
 }
 
@@ -111,13 +111,13 @@ func saveSystemInfoToDB(info SystemInfo) error {
 	if err != nil {
 		return fmt.Errorf("erro ao serializar para JSON: %v", err)
 	}
-	
+
 	// Inserir no banco de dados
 	_, err = db.Exec("INSERT INTO system_info (info, timestamp) VALUES (?, ?)", string(infoJSON), time.Now())
 	if err != nil {
 		return fmt.Errorf("erro ao inserir no banco de dados: %v", err)
 	}
-	
+
 	return nil
 }
 
@@ -127,13 +127,13 @@ func clearDatabase() error {
 	if err != nil {
 		return fmt.Errorf("erro ao limpar banco de dados: %v", err)
 	}
-	
+
 	// Resetar o autoincrement
 	_, err = db.Exec("DELETE FROM sqlite_sequence WHERE name='system_info'")
 	if err != nil {
 		return fmt.Errorf("erro ao resetar sequência: %v", err)
 	}
-	
+
 	return nil
 }
 

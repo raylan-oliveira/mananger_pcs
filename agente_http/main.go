@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -23,6 +24,13 @@ func main() {
 
 	fmt.Println("Agente HTTP iniciado. Aguardando requisições...")
 
+	// Verificar se estamos em um processo de atualização recente
+	if isRecentlyUpdated() {
+		fmt.Println("Atualização recente detectada, pulando verificação de atualizações inicial")
+		// Criar um arquivo para marcar que a atualização foi concluída com sucesso
+		markUpdateSuccess()
+	}
+
 	// Inicializa o banco de dados SQLite
 	err := initDatabase()
 	if err != nil {
@@ -31,12 +39,16 @@ func main() {
 	}
 	defer closeDatabase()
 
+	// Verificar se há um arquivo version.txt na pasta do executável
+	// e atualizar a versão no banco de dados se necessário
+	updateVersionFromFile()
+
 	// Carregar o IP do servidor de atualização do banco de dados
 	serverIP, err := getUpdateServerIP()
 	if err != nil {
 		fmt.Printf("Erro ao obter IP do servidor de atualização: %v\n", err)
 		fmt.Println("Usando IP de atualização padrão")
-		updateServerURL = "http://10.46.102.245:9991"
+		updateServerURL = "http://192.168.1.5:9991"
 	} else {
 		updateServerURL = serverIP
 		fmt.Printf("Usando servidor de atualização: %s\n", updateServerURL)
@@ -157,12 +169,76 @@ func waitForShutdown() {
 	// Criar canal para sinais do sistema operacional
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-	
+
 	// Aguardar sinal
 	<-sigs
-	
+
 	// Encerrar servidor HTTP
 	shutdownHTTPServer()
-	
+
 	fmt.Println("Programa encerrado")
+}
+
+// updateVersionFromFile verifica se existe um arquivo version.txt
+// e atualiza a versão no banco de dados se necessário
+func updateVersionFromFile() {
+	exePath, err := os.Executable()
+	if err != nil {
+		fmt.Printf("Erro ao obter caminho do executável: %v\n", err)
+		return
+	}
+
+	exeDir := filepath.Dir(exePath)
+	versionPath := filepath.Join(exeDir, "version.txt")
+
+	// Verificar se o arquivo existe
+	if _, err := os.Stat(versionPath); os.IsNotExist(err) {
+		return
+	}
+
+	// Ler o conteúdo do arquivo
+	content, err := os.ReadFile(versionPath)
+	if err != nil {
+		fmt.Printf("Erro ao ler arquivo de versão: %v\n", err)
+		return
+	}
+
+	// Obter a versão do arquivo
+	fileVersion := strings.TrimSpace(string(content))
+
+	// Verificar se a versão está no formato válido
+	if !isValidVersionFormat(fileVersion) {
+		fmt.Printf("Formato de versão inválido no arquivo: %s\n", fileVersion)
+		return
+	}
+
+	// Obter a versão atual do banco de dados
+	currentVersion, err := getCurrentVersion()
+	if err != nil {
+		fmt.Printf("Erro ao obter versão atual do banco de dados: %v\n", err)
+		return
+	}
+
+	// Atualizar a versão no banco de dados se for diferente
+	if fileVersion != currentVersion {
+		fmt.Printf("Atualizando versão no banco de dados: %s -> %s\n", currentVersion, fileVersion)
+		err = updateVersion(fileVersion)
+		if err != nil {
+			fmt.Printf("Erro ao atualizar versão no banco de dados: %v\n", err)
+		}
+	}
+}
+
+// markUpdateSuccess marca que uma atualização foi concluída com sucesso
+func markUpdateSuccess() {
+	exePath, err := os.Executable()
+	if err != nil {
+		return
+	}
+
+	exeDir := filepath.Dir(exePath)
+	successFlagPath := filepath.Join(exeDir, ".update_success")
+
+	// Criar arquivo de marcação
+	os.WriteFile(successFlagPath, []byte(time.Now().String()), 0644)
 }

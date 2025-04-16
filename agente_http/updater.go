@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -48,56 +49,138 @@ func logUpdateError(message string) {
 
 // checkForUpdates verifica se há atualizações disponíveis
 func checkForUpdates() (bool, string, error) {
-	// Obter a versão atual
-	currentVersion, err := getCurrentVersion()
-	if err != nil {
-		logUpdateError(fmt.Sprintf("Erro ao obter versão atual: %v", err))
-		return false, "", err
-	}
+    // Verificar se estamos em um processo de atualização recente
+    if isRecentlyUpdated() {
+        logUpdateError("Atualização recente detectada, pulando verificação de atualizações")
+        return false, "", nil
+    }
 
-	// URL do arquivo de versão
-	versionURL := updateServerURL + "/version.txt"
+    // Obter a versão atual
+    currentVersion, err := getCurrentVersion()
+    if err != nil {
+        logUpdateError(fmt.Sprintf("Erro ao obter versão atual: %v", err))
+        return false, "", err
+    }
 
-	// Fazer requisição HTTP para obter a versão mais recente
-	// Adicionar timeout para evitar bloqueio indefinido
-	client := &http.Client{
-		Timeout: 30 * time.Second,
-	}
-	resp, err := client.Get(versionURL)
-	if err != nil {
-		errMsg := fmt.Sprintf("Erro ao acessar servidor de atualizações: %v", err)
-		logUpdateError(errMsg)
-		return false, "", fmt.Errorf(errMsg)
-	}
-	defer resp.Body.Close()
+    // Verificar se o arquivo de versão local existe e é recente
+    exePath, _ := os.Executable()
+    exeDir := filepath.Dir(exePath)
+    versionPath := filepath.Join(exeDir, "version.txt")
+    
+    // Se o arquivo version.txt existir e for recente (menos de 5 minutos), não verificar atualizações
+    if info, err := os.Stat(versionPath); err == nil {
+        if time.Since(info.ModTime()) < 5*time.Minute {
+            logUpdateError("Arquivo version.txt recente encontrado, pulando verificação de atualizações")
+            return false, currentVersion, nil
+        }
+    }
 
-	// Verificar o código de status da resposta
-	if resp.StatusCode != http.StatusOK {
-		errMsg := fmt.Sprintf("Servidor retornou código de status %d", resp.StatusCode)
-		logUpdateError(errMsg)
-		return false, "", fmt.Errorf(errMsg)
-	}
+    // URL do arquivo de versão
+    versionURL := updateServerURL + "/version.txt"
+    
+    // Fazer requisição HTTP para obter a versão mais recente
+    // Adicionar timeout para evitar bloqueio indefinido
+    client := &http.Client{
+        Timeout: 30 * time.Second,
+    }
+    resp, err := client.Get(versionURL)
+    if err != nil {
+        errMsg := fmt.Sprintf("Erro ao acessar servidor de atualizações: %v", err)
+        logUpdateError(errMsg)
+        return false, "", fmt.Errorf(errMsg)
+    }
+    defer resp.Body.Close()
 
-	// Ler o conteúdo da resposta
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return false, "", fmt.Errorf("erro ao ler resposta do servidor: %v", err)
-	}
+    // Verificar o código de status da resposta
+    if resp.StatusCode != http.StatusOK {
+        errMsg := fmt.Sprintf("Servidor retornou código de status %d", resp.StatusCode)
+        logUpdateError(errMsg)
+        return false, "", fmt.Errorf(errMsg)
+    }
 
-	// Obter a versão mais recente (remover espaços e quebras de linha)
-	latestVersion := strings.TrimSpace(string(body))
+    // Ler o conteúdo da resposta
+    body, err := io.ReadAll(resp.Body)
+    if err != nil {
+        return false, "", fmt.Errorf("erro ao ler resposta do servidor: %v", err)
+    }
 
-	// Verificar se a versão está no formato esperado (x.y.z)
-	if !isValidVersionFormat(latestVersion) {
-		return false, "", fmt.Errorf("formato de versão inválido: %s", latestVersion)
-	}
+    // Obter a versão mais recente (remover espaços e quebras de linha)
+    latestVersion := strings.TrimSpace(string(body))
 
-	// Comparar versões
-	if latestVersion != currentVersion {
-		return true, latestVersion, nil
-	}
+    // Verificar se a versão está no formato esperado (x.y.z)
+    if !isValidVersionFormat(latestVersion) {
+        return false, "", fmt.Errorf("formato de versão inválido: %s", latestVersion)
+    }
 
-	return false, currentVersion, nil
+    // Comparar versões
+    if compareVersions(latestVersion, currentVersion) > 0 {
+        return true, latestVersion, nil
+    }
+
+    return false, currentVersion, nil
+}
+
+// compareVersions compara duas versões no formato x.y.z
+// Retorna:
+// -1 se v1 < v2
+//  0 se v1 == v2
+//  1 se v1 > v2
+func compareVersions(v1, v2 string) int {
+    parts1 := strings.Split(v1, ".")
+    parts2 := strings.Split(v2, ".")
+    
+    // Garantir que ambas as versões têm 3 partes
+    if len(parts1) != 3 || len(parts2) != 3 {
+        // Se alguma versão não tiver 3 partes, considerar iguais para evitar atualizações desnecessárias
+        return 0
+    }
+    
+    // Comparar cada parte da versão
+    for i := 0; i < 3; i++ {
+        // Converter para inteiros
+        n1, err1 := strconv.Atoi(parts1[i])
+        n2, err2 := strconv.Atoi(parts2[i])
+        
+        // Se houver erro na conversão, considerar iguais
+        if err1 != nil || err2 != nil {
+            continue
+        }
+        
+        // Comparar os números
+        if n1 < n2 {
+            return -1
+        } else if n1 > n2 {
+            return 1
+        }
+    }
+    
+    // Se chegou aqui, as versões são iguais
+    return 0
+}
+
+// isRecentlyUpdated verifica se o aplicativo foi atualizado recentemente
+func isRecentlyUpdated() bool {
+    // Verificar se existe um arquivo de marcação de atualização recente
+    exePath, err := os.Executable()
+    if err != nil {
+        return false
+    }
+    
+    exeDir := filepath.Dir(exePath)
+    updateFlagPath := filepath.Join(exeDir, ".recent_update")
+    
+    // Verificar se o arquivo existe
+    info, err := os.Stat(updateFlagPath)
+    if err != nil {
+        if os.IsNotExist(err) {
+            return false
+        }
+        // Em caso de outro erro, assumimos que não foi atualizado recentemente
+        return false
+    }
+    
+    // Verificar se o arquivo foi criado nas últimas 5 minutos (aumentado de 2 para 5)
+    return time.Since(info.ModTime()) < 5*time.Minute
 }
 
 // isValidVersionFormat verifica se a string está no formato de versão esperado (x.y.z)
@@ -208,6 +291,12 @@ func downloadAndUpdate(newVersion string) error {
         }
     }
     
+    // Marcar que uma atualização foi realizada recentemente
+    err = markRecentUpdate()
+    if err != nil {
+        logUpdateError(fmt.Sprintf("Aviso: Não foi possível marcar atualização recente: %v", err))
+    }
+    
     // 5. Fechar o servidor HTTP para liberar a porta
     logUpdateError("Fechando servidor HTTP para liberar a porta...")
     // Implementado em http_server.go - será chamado antes de iniciar o novo executável
@@ -228,6 +317,20 @@ func downloadAndUpdate(newVersion string) error {
     logUpdateError("Nova versão iniciada com sucesso. Encerrando versão atual...")
     
     return nil
+}
+
+// markRecentUpdate marca que uma atualização foi realizada recentemente
+func markRecentUpdate() error {
+    exePath, err := os.Executable()
+    if err != nil {
+        return err
+    }
+    
+    exeDir := filepath.Dir(exePath)
+    updateFlagPath := filepath.Join(exeDir, ".recent_update")
+    
+    // Criar arquivo de marcação
+    return os.WriteFile(updateFlagPath, []byte(time.Now().String()), 0644)
 }
 
 // Função auxiliar para baixar arquivos com verificações
