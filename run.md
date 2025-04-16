@@ -27,5 +27,7 @@ go build generate_keys.go
 
 
 # Controoler
-controller.exe -agent 192.168.1.100:9999 -update-ip http://10.0.0.1:9991
-commander.exe -agent 192.168.1.100 -get-info
+commander.exe -agent 10.46.102.245:9999 -update-ip http://10.46.102.245:9991
+commander.exe -agent 10.46.102.245 -get-info
+commander.exe -agent 10.46.102.245 -sys-interval 15
+commander.exe -agent 10.46.102.245 -update-interval 30

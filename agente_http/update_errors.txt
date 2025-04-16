@@ -70,3 +70,54 @@ porque o host conectado não respondeu.
 [2025-04-16 10:21:35] Erro ao acessar servidor de atualizações: Get "http://192.168.1.5:9991/version.txt": dial tcp 192.168.1.5:9991: connectex: Uma tentativa de conexão falhou porque o componente conectado não respondeu
 corretamente após um período de tempo ou a conexão estabelecida falhou
 porque o host conectado não respondeu.
+[2025-04-16 10:37:20] Erro ao acessar servidor de atualizações: Get "http://192.168.1.5:9991/version.txt": dial tcp 192.168.1.5:9991: connectex: Uma tentativa de conexão falhou porque o componente conectado não respondeu
+corretamente após um período de tempo ou a conexão estabelecida falhou
+porque o host conectado não respondeu.
+[2025-04-16 10:39:01] Erro ao acessar servidor de atualizações: Get "http://192.168.1.5:9991/version.txt": dial tcp 192.168.1.5:9991: connectex: Uma tentativa de conexão falhou porque o componente conectado não respondeu
+corretamente após um período de tempo ou a conexão estabelecida falhou
+porque o host conectado não respondeu.
+[2025-04-16 10:39:08] Erro ao acessar servidor de atualizações: Get "http://192.168.1.5:9991/version.txt": dial tcp 192.168.1.5:9991: connectex: Uma tentativa de conexão falhou porque o componente conectado não respondeu
+corretamente após um período de tempo ou a conexão estabelecida falhou
+porque o host conectado não respondeu.
+[2025-04-16 10:47:59] Erro ao acessar servidor de atualizações: Get "http://192.168.1.5:9991/version.txt": dial tcp 192.168.1.5:9991: connectex: Uma tentativa de conexão falhou porque o componente conectado não respondeu
+corretamente após um período de tempo ou a conexão estabelecida falhou
+porque o host conectado não respondeu.
+[2025-04-16 10:50:33] Erro ao acessar servidor de atualizações: Get "http://10.46.102.245:9991/version.txt": dial tcp 10.46.102.245:9991: connectex: Nenhuma conexão pôde ser feita porque a máquina de destino as recusou ativamente.
+[2025-04-16 11:49:17] Erro ao acessar servidor de atualizações: Get "http://192.168.1.5:9991/version.txt": dial tcp 192.168.1.5:9991: connectex: Uma tentativa de conexão falhou porque o componente conectado não respondeu
+corretamente após um período de tempo ou a conexão estabelecida falhou
+porque o host conectado não respondeu.
+[2025-04-16 11:56:07] Erro ao acessar servidor de atualizações: Get "http://192.168.1.5:9991/version.txt": dial tcp 192.168.1.5:9991: connectex: Uma tentativa de conexão falhou porque o componente conectado não respondeu
+corretamente após um período de tempo ou a conexão estabelecida falhou
+porque o host conectado não respondeu.
+[2025-04-16 11:56:46] Diretório do executável: C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http
+[2025-04-16 11:56:46] Removendo backup antigo...
+[2025-04-16 11:56:46] Renomeando executável atual para backup: C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe -> C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~
+[2025-04-16 11:56:46] Baixando nova versão do executável de http://10.46.102.245:9991/agente_http.exe
+[2025-04-16 11:56:46] Baixando chave pública atualizada...
+[2025-04-16 11:56:46] Baixando arquivo de versão...
+[2025-04-16 11:56:46] Fechando servidor HTTP para liberar a porta...
+[2025-04-16 11:56:46] Iniciando nova versão do aplicativo...
+[2025-04-16 11:56:47] Nova versão iniciada com sucesso. Encerrando versão atual...
+[2025-04-16 11:56:47] Reiniciando aplicativo após atualização...
+[2025-04-16 11:56:47] Atualização recente detectada, pulando verificação de atualizações
+[2025-04-16 11:57:58] Atualização recente detectada, pulando verificação de atualizações
+[2025-04-16 11:59:06] Atualização recente detectada, pulando verificação de atualizações
+[2025-04-16 11:59:30] Atualização recente detectada, pulando verificação de atualizações
+[2025-04-16 12:00:17] Atualização recente detectada, pulando verificação de atualizações
+[2025-04-16 12:05:46] Diretório do executável: C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http
+[2025-04-16 12:05:46] Removendo backup antigo...
+[2025-04-16 12:05:46] Aviso: Não foi possível remover backup antigo: remove C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~: Acesso negado.
+[2025-04-16 12:05:46] Renomeando executável atual para backup: C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe -> C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~
+[2025-04-16 12:05:46] Erro ao renomear executável atual: rename C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~: Acesso negado.
+[2025-04-16 12:06:10] Diretório do executável: C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http
+[2025-04-16 12:06:10] Renomeando executável atual para backup: C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe -> C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~
+[2025-04-16 12:06:10] Baixando nova versão do executável de http://10.46.102.245:9991/agente_http.exe
+[2025-04-16 12:06:10] Baixando chave pública atualizada...
+[2025-04-16 12:06:10] Baixando arquivo de versão...
+[2025-04-16 12:06:10] Fechando servidor HTTP para liberar a porta...
+[2025-04-16 12:06:10] Iniciando nova versão do aplicativo...
+[2025-04-16 12:06:11] Nova versão iniciada com sucesso. Encerrando versão atual...
+[2025-04-16 12:06:11] Reiniciando aplicativo após atualização...
+[2025-04-16 12:06:11] Atualização recente detectada, pulando verificação de atualizações
+[2025-04-16 12:06:58] Atualização recente detectada, pulando verificação de atualizações
+[2025-04-16 12:09:21] Atualização recente detectada, pulando verificação de atualizações

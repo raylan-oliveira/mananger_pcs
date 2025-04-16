@@ -14,15 +14,28 @@ import (
 
 // Variáveis globais
 var (
-	cachedSystemInfo SystemInfo
-	lastUpdateTime   time.Time
-	updateServerURL  string // Servidor de atualização - será carregado do banco de dados
+	cachedSystemInfo    SystemInfo
+	lastUpdateTime      time.Time
+	lastUpdateCheckTime time.Time
+	updateServerURL     string // Servidor de atualização - será carregado do banco de dados
+
+	// Adicionar variáveis para controlar os intervalos
+	systemInfoUpdateIntervalMinutes int
+	updateCheckIntervalMinutes      int
+
+	// Canais para sinalizar mudanças nos intervalos
+	systemInfoIntervalChanged  chan bool
+	updateCheckIntervalChanged chan bool
 )
 
 func main() {
 	port := 9999
 
 	fmt.Println("Agente HTTP iniciado. Aguardando requisições...")
+
+	// Inicializar canais para sinalizar mudanças nos intervalos
+	systemInfoIntervalChanged = make(chan bool, 1)
+	updateCheckIntervalChanged = make(chan bool, 1)
 
 	// Verificar se estamos em um processo de atualização recente
 	if isRecentlyUpdated() {
@@ -52,6 +65,25 @@ func main() {
 	} else {
 		updateServerURL = serverIP
 		fmt.Printf("Usando servidor de atualização: %s\n", updateServerURL)
+	}
+
+	// Obter os intervalos de atualização configurados
+	systemInfoUpdateIntervalMinutes, err = getSystemInfoUpdateInterval()
+	if err != nil {
+		fmt.Printf("Erro ao obter intervalo de atualização de informações: %v\n", err)
+		fmt.Println("Usando intervalo padrão de 10 minutos")
+		systemInfoUpdateIntervalMinutes = 10
+	} else {
+		fmt.Printf("Intervalo de atualização de informações: %d minutos\n", systemInfoUpdateIntervalMinutes)
+	}
+
+	updateCheckIntervalMinutes, err = getUpdateCheckInterval()
+	if err != nil {
+		fmt.Printf("Erro ao obter intervalo de verificação de atualizações: %v\n", err)
+		fmt.Println("Usando intervalo padrão de 10 minutos")
+		updateCheckIntervalMinutes = 10
+	} else {
+		fmt.Printf("Intervalo de verificação de atualizações: %d minutos\n", updateCheckIntervalMinutes)
 	}
 
 	// Verificar atualizações
@@ -156,6 +188,12 @@ func main() {
 	// Configurando o servidor HTTP
 	http.HandleFunc("/", systemInfoHandler)
 	http.HandleFunc("/update-server", updateServerIPHandler)
+	http.HandleFunc("/update-system-info-interval", updateSystemInfoIntervalHandler)
+	http.HandleFunc("/update-check-interval", updateCheckIntervalHandler)
+
+	// Iniciar goroutines para gerenciar atualizações periódicas
+	go manageSystemInfoUpdates()
+	go manageUpdateChecks()
 
 	// Inicializar o servidor HTTP
 	initHTTPServer(port)
@@ -241,4 +279,73 @@ func markUpdateSuccess() {
 
 	// Criar arquivo de marcação
 	os.WriteFile(successFlagPath, []byte(time.Now().String()), 0644)
+}
+
+// manageSystemInfoUpdates gerencia as atualizações periódicas das informações do sistema
+func manageSystemInfoUpdates() {
+	// Definir o ticker inicial
+	ticker := time.NewTicker(time.Duration(systemInfoUpdateIntervalMinutes) * time.Minute)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			// Atualizar apenas informações dinâmicas
+			updateDynamicInfo(&cachedSystemInfo)
+
+			// Salvar as informações atualizadas no banco de dados
+			err := saveSystemInfoToDB(cachedSystemInfo)
+			if err != nil {
+				fmt.Printf("Erro ao salvar informações atualizadas: %v\n", err)
+			}
+
+			lastUpdateTime = time.Now()
+
+		case <-systemInfoIntervalChanged:
+			// O intervalo foi alterado, recriar o ticker
+			ticker.Stop()
+			ticker = time.NewTicker(time.Duration(systemInfoUpdateIntervalMinutes) * time.Minute)
+			fmt.Printf("Intervalo de atualização de informações alterado para: %d minutos\n", systemInfoUpdateIntervalMinutes)
+		}
+	}
+}
+
+// manageUpdateChecks gerencia as verificações periódicas de atualizações
+func manageUpdateChecks() {
+	// Definir o ticker inicial
+	ticker := time.NewTicker(time.Duration(updateCheckIntervalMinutes) * time.Minute)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			// É hora de verificar atualizações
+			fmt.Printf("Verificando atualizações disponíveis (intervalo: %d minutos)...\n", updateCheckIntervalMinutes)
+			updateAvailable, latestVersion, err := checkForUpdates()
+			if err != nil {
+				fmt.Printf("Aviso: Não foi possível verificar atualizações: %v\n", err)
+			} else if updateAvailable {
+				fmt.Printf("Nova versão disponível: %s. Baixando atualização...\n", latestVersion)
+				err = downloadAndUpdate(latestVersion)
+				if err != nil {
+					fmt.Printf("Erro ao baixar atualização: %v\n", err)
+				} else {
+					fmt.Println("Atualização baixada com sucesso. O aplicativo será reiniciado.")
+					// Reiniciar o aplicativo
+					restartApplication()
+					return
+				}
+			} else {
+				fmt.Println("O aplicativo está atualizado.")
+			}
+
+			lastUpdateCheckTime = time.Now()
+
+		case <-updateCheckIntervalChanged:
+			// O intervalo foi alterado, recriar o ticker
+			ticker.Stop()
+			ticker = time.NewTicker(time.Duration(updateCheckIntervalMinutes) * time.Minute)
+			fmt.Printf("Intervalo de verificação de atualizações alterado para: %d minutos\n", updateCheckIntervalMinutes)
+		}
+	}
 }

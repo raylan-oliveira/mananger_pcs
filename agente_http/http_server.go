@@ -16,9 +16,23 @@ const encriptado = true
 
 // Handler para fornecer informações do sistema
 func systemInfoHandler(w http.ResponseWriter, r *http.Request) {
-	// Verificar se é hora de atualizar o cache (a cada 5 minutos)
-	if time.Since(lastUpdateTime).Minutes() >= 5 {
-		fmt.Println("Atualizando informações do sistema...")
+	// Obter o intervalo de atualização das informações do sistema
+	systemInfoUpdateInterval, err := getSystemInfoUpdateInterval()
+	if err != nil {
+		fmt.Printf("Erro ao obter intervalo de atualização: %v, usando padrão de 10 minutos\n", err)
+		systemInfoUpdateInterval = 10
+	}
+
+	// Obter o intervalo de verificação de atualizações
+	updateCheckInterval, err := getUpdateCheckInterval()
+	if err != nil {
+		fmt.Printf("Erro ao obter intervalo de verificação: %v, usando padrão de 10 minutos\n", err)
+		updateCheckInterval = 10
+	}
+
+	// Verificar se é hora de atualizar o cache (baseado na configuração)
+	if time.Since(lastUpdateTime).Minutes() >= float64(systemInfoUpdateInterval) {
+		fmt.Printf("Atualizando informações do sistema (intervalo: %d minutos)...\n", systemInfoUpdateInterval)
 
 		// Atualizar apenas informações dinâmicas
 		updateDynamicInfo(&cachedSystemInfo)
@@ -29,8 +43,12 @@ func systemInfoHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Printf("Erro ao salvar informações atualizadas: %v\n", err)
 		}
 
-		// Verificar atualizações do agente após atualizar informações do sistema
-		fmt.Println("Verificando atualizações disponíveis...")
+		lastUpdateTime = time.Now()
+	}
+
+	// Verificar se é hora de verificar atualizações (baseado na configuração)
+	if time.Since(lastUpdateCheckTime).Minutes() >= float64(updateCheckInterval) {
+		fmt.Printf("Verificando atualizações disponíveis (intervalo: %d minutos)...\n", updateCheckInterval)
 		updateAvailable, latestVersion, err := checkForUpdates()
 		if err != nil {
 			fmt.Printf("Aviso: Não foi possível verificar atualizações: %v\n", err)
@@ -49,7 +67,7 @@ func systemInfoHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("O aplicativo está atualizado.")
 		}
 
-		lastUpdateTime = time.Now()
+		lastUpdateCheckTime = time.Now()
 	}
 
 	// Obter a versão atual do agente do banco de dados
@@ -190,6 +208,171 @@ func updateServerIPHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("IP do servidor de atualização alterado para: %s\n", request.IP)
 }
 
+// Handler para atualizar o intervalo de atualização das informações do sistema
+func updateSystemInfoIntervalHandler(w http.ResponseWriter, r *http.Request) {
+	// Apenas aceitar requisições POST
+	if r.Method != http.MethodPost {
+		http.Error(w, "Método não permitido", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Ler o corpo da requisição
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Erro ao ler corpo da requisição", http.StatusBadRequest)
+		return
+	}
+
+	// Estrutura para deserializar o JSON
+	type UpdateRequest struct {
+		Intervalo int    `json:"intervalo"`
+		Senha     string `json:"senha"`
+	}
+
+	// Verificar se o corpo está vazio
+	if len(body) == 0 {
+		http.Error(w, "Corpo da requisição vazio", http.StatusBadRequest)
+		return
+	}
+
+	// Tentar descriptografar o corpo com a chave pública
+	decryptedData, err := decryptWithPublicKey(string(body))
+	if err != nil {
+		fmt.Printf("Erro ao descriptografar dados: %v\n", err)
+		http.Error(w, "Erro ao descriptografar dados", http.StatusBadRequest)
+		return
+	}
+
+	// Deserializar o JSON
+	var request UpdateRequest
+	err = json.Unmarshal([]byte(decryptedData), &request)
+	if err != nil {
+		http.Error(w, "Erro ao deserializar JSON", http.StatusBadRequest)
+		return
+	}
+
+	// Verificar se o intervalo e a senha foram fornecidos
+	if request.Intervalo <= 0 {
+		http.Error(w, "Intervalo inválido", http.StatusBadRequest)
+		return
+	}
+
+	if request.Senha == "" {
+		http.Error(w, "Senha não fornecida", http.StatusBadRequest)
+		return
+	}
+
+	// Verificar a senha
+	if request.Senha != "senha_secreta_do_agente" {
+		http.Error(w, "Senha inválida", http.StatusUnauthorized)
+		return
+	}
+
+	// Atualizar o intervalo no banco de dados
+	err = updateSystemInfoInterval(request.Intervalo)
+	if err != nil {
+		fmt.Printf("Erro ao atualizar intervalo de atualização: %v\n", err)
+		http.Error(w, "Erro ao atualizar intervalo de atualização", http.StatusInternalServerError)
+		return
+	}
+
+	// Atualizar a variável global e sinalizar a mudança
+	systemInfoUpdateIntervalMinutes = request.Intervalo
+	select {
+	case systemInfoIntervalChanged <- true:
+		// Sinal enviado com sucesso
+	default:
+		// Canal cheio, não bloquear
+	}
+
+	// Responder com sucesso
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "Intervalo de atualização de informações alterado para: %d minutos", request.Intervalo)
+	fmt.Printf("Intervalo de atualização de informações alterado para: %d minutos\n", request.Intervalo)
+}
+
+// Handler para atualizar o intervalo de verificação de atualizações
+func updateCheckIntervalHandler(w http.ResponseWriter, r *http.Request) {
+	// Apenas aceitar requisições POST
+	if r.Method != http.MethodPost {
+		http.Error(w, "Método não permitido", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Ler o corpo da requisição
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Erro ao ler corpo da requisição", http.StatusBadRequest)
+		return
+	}
+
+	// Estrutura para deserializar o JSON
+	type UpdateRequest struct {
+		Intervalo int    `json:"intervalo"`
+		Senha     string `json:"senha"`
+	}
+
+	// Verificar se o corpo está vazio
+	if len(body) == 0 {
+		http.Error(w, "Corpo da requisição vazio", http.StatusBadRequest)
+		return
+	}
+
+	// Tentar descriptografar o corpo com a chave pública
+	decryptedData, err := decryptWithPublicKey(string(body))
+	if err != nil {
+		fmt.Printf("Erro ao descriptografar dados: %v\n", err)
+		http.Error(w, "Erro ao descriptografar dados", http.StatusBadRequest)
+		return
+	}
+
+	// Deserializar o JSON
+	var request UpdateRequest
+	err = json.Unmarshal([]byte(decryptedData), &request)
+	if err != nil {
+		http.Error(w, "Erro ao deserializar JSON", http.StatusBadRequest)
+		return
+	}
+
+	// Verificar se o intervalo e a senha foram fornecidos
+	if request.Intervalo <= 0 {
+		http.Error(w, "Intervalo inválido", http.StatusBadRequest)
+		return
+	}
+
+	if request.Senha == "" {
+		http.Error(w, "Senha não fornecida", http.StatusBadRequest)
+		return
+	}
+
+	// Verificar a senha
+	if request.Senha != "senha_secreta_do_agente" {
+		http.Error(w, "Senha inválida", http.StatusUnauthorized)
+		return
+	}
+
+	// Atualizar o intervalo no banco de dados
+	err = updateCheckInterval(request.Intervalo)
+	if err != nil {
+		fmt.Printf("Erro ao atualizar intervalo de verificação de atualizações: %v\n", err)
+		http.Error(w, "Erro ao atualizar intervalo de verificação de atualizações", http.StatusInternalServerError)
+		return
+	}
+
+	// Atualizar a variável global e sinalizar a mudança
+	updateCheckIntervalMinutes = request.Intervalo
+	select {
+	case updateCheckIntervalChanged <- true:
+		// Sinal enviado com sucesso
+	default:
+		// Canal cheio, não bloquear
+	}
+
+	// Responder com sucesso
+	w.WriteHeader(http.StatusOK)
+	fmt.Printf("Intervalo de verificação de atualizações alterado para: %d minutos\n", request.Intervalo)
+}
+
 // Variáveis globais para controle do servidor HTTP
 var (
 	httpServer     *http.Server
@@ -202,6 +385,8 @@ func initHTTPServer(port int) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", systemInfoHandler)
 	mux.HandleFunc("/update-server", updateServerIPHandler)
+	mux.HandleFunc("/update-system-info-interval", updateSystemInfoIntervalHandler)
+	mux.HandleFunc("/update-check-interval", updateCheckIntervalHandler)
 
 	// Criar o servidor com configurações personalizadas
 	httpServer = &http.Server{

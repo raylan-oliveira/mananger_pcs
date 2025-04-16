@@ -66,6 +66,110 @@ func updateAgentServerIP(agentIP, newServerIP string) error {
 	return nil
 }
 
+// updateSystemInfoInterval atualiza o intervalo de atualização das informações do sistema em um agente
+func updateSystemInfoInterval(agentIP string, minutes int) error {
+	// Verificar se o agentIP inclui a porta
+	if !strings.Contains(agentIP, ":") {
+		agentIP = agentIP + ":9999" // Porta padrão do agente
+	}
+	
+	// Verificar se o intervalo é válido
+	if minutes < 1 {
+		return fmt.Errorf("intervalo inválido: deve ser pelo menos 1 minuto")
+	}
+	
+	// Criar o payload
+	type UpdatePayload struct {
+		Intervalo int    `json:"intervalo"`
+		Senha     string `json:"senha"`
+	}
+	
+	payload := UpdatePayload{
+		Intervalo: minutes,
+		Senha:     "senha_secreta_do_agente", // Senha fixa conhecida pelo agente
+	}
+	
+	// Serializar para JSON
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("erro ao serializar payload: %v", err)
+	}
+	
+	// Criptografar com a chave privada
+	encryptedData, err := signWithPrivateKey(jsonData)
+	if err != nil {
+		return fmt.Errorf("erro ao criptografar dados: %v", err)
+	}
+	
+	// Enviar a requisição para o agente
+	url := fmt.Sprintf("http://%s/update-system-info-interval", agentIP)
+	resp, err := http.Post(url, "application/text", strings.NewReader(encryptedData))
+	if err != nil {
+		return fmt.Errorf("erro ao enviar requisição para o agente: %v", err)
+	}
+	defer resp.Body.Close()
+	
+	// Verificar o código de status
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("agente retornou código %d: %s", resp.StatusCode, string(bodyBytes))
+	}
+	
+	return nil
+}
+
+// updateCheckInterval atualiza o intervalo de verificação de atualizações em um agente
+func updateCheckInterval(agentIP string, minutes int) error {
+	// Verificar se o agentIP inclui a porta
+	if !strings.Contains(agentIP, ":") {
+		agentIP = agentIP + ":9999" // Porta padrão do agente
+	}
+	
+	// Verificar se o intervalo é válido
+	if minutes < 1 {
+		return fmt.Errorf("intervalo inválido: deve ser pelo menos 1 minuto")
+	}
+	
+	// Criar o payload
+	type UpdatePayload struct {
+		Intervalo int    `json:"intervalo"`
+		Senha     string `json:"senha"`
+	}
+	
+	payload := UpdatePayload{
+		Intervalo: minutes,
+		Senha:     "senha_secreta_do_agente", // Senha fixa conhecida pelo agente
+	}
+	
+	// Serializar para JSON
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("erro ao serializar payload: %v", err)
+	}
+	
+	// Criptografar com a chave privada
+	encryptedData, err := signWithPrivateKey(jsonData)
+	if err != nil {
+		return fmt.Errorf("erro ao criptografar dados: %v", err)
+	}
+	
+	// Enviar a requisição para o agente
+	url := fmt.Sprintf("http://%s/update-check-interval", agentIP)
+	resp, err := http.Post(url, "application/text", strings.NewReader(encryptedData))
+	if err != nil {
+		return fmt.Errorf("erro ao enviar requisição para o agente: %v", err)
+	}
+	defer resp.Body.Close()
+	
+	// Verificar o código de status
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("agente retornou código %d: %s", resp.StatusCode, string(bodyBytes))
+	}
+	
+	return nil
+}
+
 // Aqui você pode adicionar novos comandos para os agentes
 // Por exemplo:
 
