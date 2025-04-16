@@ -124,16 +124,6 @@ func getSystemInfoData() map[string]interface{} {
 			}
 		}
 
-		// Extraia o tempo de inicialização e calcule o tempo de atividade
-		if bootTimeStr, ok := rawSystemInfo["Tempo de Inicialização do Sistema"]; ok {
-			// Parse boot time in format "14/04/2025, 10:17:03"
-			bootTime, err := time.Parse("02/01/2006, 15:04:05", bootTimeStr)
-			if err == nil {
-				uptime := time.Since(bootTime)
-				info["uptime"] = int64(uptime.Minutes())
-			}
-		}
-
 		if biosVersion, ok := rawSystemInfo["Versão do BIOS"]; ok {
 			info["versao_bios"] = biosVersion
 		}
@@ -185,10 +175,82 @@ func getSystemInfoData() map[string]interface{} {
 			}
 		}
 
-		// Variável para armazenar o uptime em minutos
-		var uptimeMinutes int64 = 0
+		// Nota: A coleta de uptime foi movida para a seção comum acima
+	}
 
-		// Método 1: Obter uptime em minutos diretamente do PowerShell
+	// Garantir que uptime nunca seja nulo
+	if info["uptime"] == nil {
+		info["uptime"] = "Desconhecido"
+	}
+
+	// Extraia o tempo de inicialização e calcule o tempo de atividade
+	var uptimeInfo []string
+
+	// Método 1: Extrair do systeminfo (já executado acima)
+	if bootTimeStr, ok := rawSystemInfo["Tempo de Inicialização do Sistema"]; ok {
+		// Armazenar o valor bruto sem cálculos
+		info["uptime_boot_time"] = bootTimeStr
+		uptimeInfo = append(uptimeInfo, fmt.Sprintf("systeminfo: %s", bootTimeStr))
+	}
+
+	// Método 2: Obter uptime em minutos diretamente do PowerShell
+	cmd = exec.Command("powershell", "-Command",
+		"$uptime = (Get-Date) - (Get-CimInstance -ClassName Win32_OperatingSystem).LastBootUpTime; "+
+			"Write-Host $uptime.TotalMinutes")
+	output, err = cmd.Output()
+	if err == nil {
+		uptimeMinutesStr := strings.TrimSpace(string(output))
+		// Armazenar o valor bruto sem cálculos
+		info["uptime_ps_minutes"] = uptimeMinutesStr
+		uptimeInfo = append(uptimeInfo, fmt.Sprintf("powershell_minutes: %s", uptimeMinutesStr))
+	}
+
+	// Método 3: Obter uptime formatado do PowerShell
+	cmd = exec.Command("powershell", "-Command",
+		"$uptime = (Get-Date) - (Get-CimInstance -ClassName Win32_OperatingSystem).LastBootUpTime; "+
+			"Write-Host \"$($uptime.Days)d $($uptime.Hours)h $($uptime.Minutes)m\"")
+	output, err = cmd.Output()
+	if err == nil {
+		uptimeFormatted := strings.TrimSpace(string(output))
+		// Armazenar o valor bruto sem cálculos
+		info["uptime_ps_formatted"] = uptimeFormatted
+		uptimeInfo = append(uptimeInfo, fmt.Sprintf("powershell_formatted: %s", uptimeFormatted))
+	}
+
+	// Armazenar todas as informações de uptime coletadas
+	if len(uptimeInfo) > 0 {
+		info["uptime_raw"] = uptimeInfo
+		// Usar o primeiro valor disponível para uptime
+		if info["uptime_ps_formatted"] != nil {
+			info["uptime"] = info["uptime_ps_formatted"]
+		} else if info["uptime_ps_minutes"] != nil {
+			info["uptime"] = info["uptime_ps_minutes"]
+		} else if info["uptime_boot_time"] != nil {
+			info["uptime"] = info["uptime_boot_time"]
+		}
+	}
+
+	// Variável para armazenar o uptime em minutos
+	var uptimeMinutes int64 = 0
+
+	// Método 1: Obter uptime em minutos diretamente do PowerShell
+	cmd = exec.Command("powershell", "-Command",
+		"$uptime = (Get-Date) - (Get-CimInstance -ClassName Win32_OperatingSystem).LastBootUpTime; "+
+			"Write-Host $uptime.TotalMinutes")
+	output, err = cmd.Output()
+	if err == nil {
+		uptimeMinutesStr := strings.TrimSpace(string(output))
+		var uptimeMinutesFloat float64
+		_, err := fmt.Sscanf(uptimeMinutesStr, "%f", &uptimeMinutesFloat)
+		if err == nil {
+			uptimeMinutes = int64(uptimeMinutesFloat)
+			// Apenas armazenamos o valor em minutos, sem formatação
+			info["uptime"] = uptimeMinutes
+		}
+	}
+
+	// Método 2: Fallback para uptime
+	if info["uptime"] == nil {
 		cmd = exec.Command("powershell", "-Command",
 			"$uptime = (Get-Date) - (Get-CimInstance -ClassName Win32_OperatingSystem).LastBootUpTime; "+
 				"Write-Host $uptime.TotalMinutes")
@@ -196,41 +258,18 @@ func getSystemInfoData() map[string]interface{} {
 		if err == nil {
 			uptimeMinutesStr := strings.TrimSpace(string(output))
 			var uptimeMinutesFloat float64
-			_, err := fmt.Sscanf(uptimeMinutesStr, "%f", &uptimeMinutesFloat)
-			if err == nil {
+			_, parseErr := fmt.Sscanf(uptimeMinutesStr, "%f", &uptimeMinutesFloat)
+			if parseErr == nil {
 				uptimeMinutes = int64(uptimeMinutesFloat)
-				// Apenas armazenamos o valor em minutos, sem formatação
 				info["uptime"] = uptimeMinutes
 			}
 		}
-
-		// Método 2: Fallback para uptime
-		if info["uptime"] == nil {
-			cmd = exec.Command("powershell", "-Command",
-				"$uptime = (Get-Date) - (Get-CimInstance -ClassName Win32_OperatingSystem).LastBootUpTime; "+
-					"Write-Host $uptime.TotalMinutes")
-			output, err = cmd.Output()
-			if err == nil {
-				uptimeMinutesStr := strings.TrimSpace(string(output))
-				var uptimeMinutesFloat float64
-				_, parseErr := fmt.Sscanf(uptimeMinutesStr, "%f", &uptimeMinutesFloat)
-				if parseErr == nil {
-					uptimeMinutes = int64(uptimeMinutesFloat)
-					info["uptime"] = uptimeMinutes
-				}
-			}
-		}
 	}
-
-	// Garantir que uptime nunca seja nulo
-	if info["uptime"] == nil {
-		info["uptime"] = 0
-	}
-
+	
 	// Atualizar o cache
 	systemInfoCache = info
 	systemInfoCacheTime = time.Now()
-
+	
 	return info
 }
 
@@ -349,7 +388,6 @@ func getCPUInfo() map[string]interface{} {
 func getDetailedMemoryInfo() map[string]interface{} {
 	info := make(map[string]interface{})
 
-	// Fix: Adjust the WMIC command to ensure proper output parsing
 	cmd := exec.Command("wmic", "OS", "get", "TotalVisibleMemorySize,FreePhysicalMemory", "/format:csv")
 	output, err := cmd.Output()
 	if err == nil {
@@ -374,7 +412,7 @@ func getDetailedMemoryInfo() map[string]interface{} {
 		}
 	}
 
-	// If the first method fails, try an alternative approach
+	// Se o primeiro método falhar, tente uma abordagem alternativa
 	if len(info) == 0 {
 		cmd := exec.Command("powershell", "-Command",
 			"$os = Get-WmiObject Win32_OperatingSystem; "+
@@ -396,6 +434,82 @@ func getDetailedMemoryInfo() map[string]interface{} {
 					info["percentual_uso"] = float64(usedKB) * 100 / float64(totalKB)
 				}
 			}
+		}
+	}
+
+	// Obter informações sobre a velocidade da memória usando wmic
+	cmd = exec.Command("wmic", "memorychip", "get", "speed")
+	output, err = cmd.Output()
+	if err == nil {
+		lines := strings.Split(string(output), "\n")
+		var speeds []int
+		for i, line := range lines {
+			if i > 0 && strings.TrimSpace(line) != "" {
+				speed := parseUint64(strings.TrimSpace(line))
+				if speed > 0 {
+					speeds = append(speeds, int(speed))
+				}
+			}
+		}
+		if len(speeds) > 0 {
+			info["velocidades_mhz"] = speeds
+			// Usar a primeira velocidade como representativa
+			info["velocidade_mhz"] = speeds[0]
+		}
+	}
+
+	// Obter informações mais detalhadas sobre a memória usando PowerShell
+	cmd = exec.Command("powershell", "-Command",
+		"Get-CimInstance -ClassName Win32_PhysicalMemory | ForEach-Object { [PSCustomObject]@{ Slot=$_.DeviceLocator; Speed=$_.Speed; ConfiguredSpeed=$_.ConfiguredClockSpeed } } | ConvertTo-Json")
+	output, err = cmd.Output()
+	if err == nil && len(output) > 0 {
+		// Armazenar a saída bruta para análise
+		jsonOutput := strings.TrimSpace(string(output))
+
+		// Processar o JSON para extrair informações estruturadas
+		var memoryModules []map[string]interface{}
+
+		// Usar PowerShell para converter o JSON para um formato mais fácil de processar
+		cmd = exec.Command("powershell", "-Command",
+			"$memInfo = Get-CimInstance -ClassName Win32_PhysicalMemory | "+
+				"Select-Object DeviceLocator, Speed, ConfiguredClockSpeed, Capacity; "+
+				"$memInfo | ForEach-Object { "+
+				"  $slot = $_.DeviceLocator; "+
+				"  $speed = $_.Speed; "+
+				"  $configSpeed = $_.ConfiguredClockSpeed; "+
+				"  $capacity = $_.Capacity; "+
+				"  Write-Host \"$slot|$speed|$configSpeed|$capacity\" "+
+				"}")
+		moduleOutput, err := cmd.Output()
+		if err == nil && len(moduleOutput) > 0 {
+			lines := strings.Split(strings.TrimSpace(string(moduleOutput)), "\n")
+			for _, line := range lines {
+				parts := strings.Split(strings.TrimSpace(line), "|")
+				if len(parts) >= 3 {
+					module := make(map[string]interface{})
+					module["slot"] = strings.TrimSpace(parts[0])
+					module["velocidade"] = parseUint64(strings.TrimSpace(parts[1]))
+					module["velocidade_configurada"] = parseUint64(strings.TrimSpace(parts[2]))
+					if len(parts) >= 4 {
+						capacityBytes := parseUint64(strings.TrimSpace(parts[3]))
+						module["capacidade_gb"] = float64(capacityBytes) / 1024 / 1024 / 1024
+					}
+					memoryModules = append(memoryModules, module)
+				}
+			}
+
+			// Se temos módulos de memória, adicione-os ao resultado
+			if len(memoryModules) > 0 {
+				info["modulos_memoria"] = memoryModules
+
+				// Usar a velocidade do primeiro módulo como representativa
+				if len(memoryModules) > 0 && memoryModules[0]["velocidade"] != nil {
+					info["velocidade_mhz"] = memoryModules[0]["velocidade"]
+				}
+			}
+		} else {
+			// Fallback: armazenar a saída JSON bruta para diagnóstico
+			info["memoria_detalhes_raw"] = jsonOutput
 		}
 	}
 

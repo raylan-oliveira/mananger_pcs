@@ -7,6 +7,7 @@
 *.dll
 *.so
 *.dylib
+*.db
 
 # Test binary, built with `go test -c`
 *.test
@@ -20,3 +21,5 @@
 # Go workspace file
 go.work
 agente_http/system_info.db
+agente_http/.recent_update
+agente_http/.update_success
