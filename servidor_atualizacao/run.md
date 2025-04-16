@@ -1,0 +1,1 @@
+servidor_atualizacao.exe -agent=192.168.1.100:9999 -update-ip=http://10.0.0.1:9991

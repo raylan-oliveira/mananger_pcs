@@ -1,0 +1,12 @@
+[2025-04-15 14:40:21] Iniciando download da versão 0.0.30 de http://10.46.102.245:9991/agente_http.exe
+[2025-04-15 14:40:21] Conectividade com o servidor confirmada
+[2025-04-15 14:40:21] Iniciando requisição HTTP para download do executável
+[2025-04-15 14:40:21] Resposta do servidor: Status 200
+[2025-04-15 14:40:21] Content-Type do arquivo: application/x-msdownload
+[2025-04-15 14:40:21] Caminho do executável atual: C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe
+[2025-04-15 14:40:21] Aviso: O executável atual parece estar bloqueado: open C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe: O arquivo já está sendo usado por outro processo.
+[2025-04-15 14:40:21] Criando arquivo temporário: C:\Users\raylan.lima\AppData\Local\Temp\agente_http_update_1744742421865921200.exe
+[2025-04-15 14:40:21] Download concluído. Bytes escritos: 16135680
+[2025-04-15 14:40:21] Tamanho do arquivo baixado: 16136192 bytes
+[2025-04-15 14:40:21] Reiniciando aplicativo após atualização...
+[2025-04-15 14:40:21] Aplicativo reiniciado com sucesso, PID: 21824
