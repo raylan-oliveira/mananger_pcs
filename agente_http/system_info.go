@@ -291,9 +291,15 @@ func getSystemInfoData() map[string]interface{} {
 
 // Função para coletar informações do sistema
 func collectSystemInfo() (SystemInfo, error) {
-
 	// Obter informações detalhadas do sistema
 	sistemaInfo := getSystemInfoData()
+	
+	// Obter usuários logados e incluí-los no mapa sistema
+	usuariosLogados := getLoggedUsers()
+	if sistemaInfo == nil {
+		sistemaInfo = make(map[string]interface{})
+	}
+	sistemaInfo["usuarios_logados"] = usuariosLogados
 
 	// Obter a versão do agente do banco de dados
 	versaoAgente, err := getCurrentVersion()
@@ -310,9 +316,13 @@ func collectSystemInfo() (SystemInfo, error) {
 		Rede:            getNetworkInfo(),
 		GPU:             getGPUInfo(),
 		Processos:       getProcessInfo(),
-		UsuariosLogados: getLoggedUsers(),
 		Hardware:        getHardwareInfo(),
-		VersaoAgente:    versaoAgente,
+		Agente: AgenteInfo{
+			VersaoAgente:              versaoAgente,
+			ServidorAtualizacao:       "",
+			SystemInfoUpdateInterval:  "",
+			UpdateCheckInterval:       "",
+		},
 	}
 
 	// Garantindo que não há valores nulos
@@ -333,9 +343,6 @@ func collectSystemInfo() (SystemInfo, error) {
 	}
 	if info.Processos == nil {
 		info.Processos = make(map[string]interface{})
-	}
-	if info.UsuariosLogados == nil {
-		info.UsuariosLogados = []string{}
 	}
 
 	return info, nil
@@ -541,9 +548,32 @@ func getDetailedMemoryInfo() map[string]interface{} {
 }
 
 // Função para atualizar informações dinâmicas
+// updateDynamicInfo atualiza apenas as informações dinâmicas do sistema
 func updateDynamicInfo(info *SystemInfo) {
-	// Atualizando usuários logados
-	info.UsuariosLogados = getLoggedUsers()
+	// Atualizar informações de memória
+	info.Memoria = getDetailedMemoryInfo()
+	
+	// Atualizar informações de disco
+	info.Discos = getDiskInfo()
+	
+	// Atualizar informações de rede
+	info.Rede = getNetworkInfo()
+	
+	// Atualizar informações de processos
+	info.Processos = getProcessInfo()
+	
+	// Atualizar informações dinâmicas do sistema
+	sistemaInfo := getSystemInfoData()
+	
+	// Obter usuários logados e incluí-los no mapa sistema
+	usuariosLogados := getLoggedUsers()
+	if sistemaInfo == nil {
+		sistemaInfo = make(map[string]interface{})
+	}
+	sistemaInfo["usuarios_logados"] = usuariosLogados
+	
+	// Atualizar o mapa sistema
+	info.Sistema = sistemaInfo
 
 	// Atualizando informações de processos
 	if runtime.GOOS == "windows" {

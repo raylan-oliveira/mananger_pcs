@@ -12,7 +12,7 @@ import (
 )
 
 // Constante para controlar se os dados devem ser criptografados
-const encriptado = true
+const encriptado = false
 
 // Handler para fornecer informações do sistema
 func systemInfoHandler(w http.ResponseWriter, r *http.Request) {
@@ -77,14 +77,39 @@ func systemInfoHandler(w http.ResponseWriter, r *http.Request) {
 		versaoAgente = "desconhecida"
 	}
 
-	// Criar uma cópia da estrutura para não modificar o cache
-	infoComVersao := cachedSystemInfo
+	// Obter o IP do servidor de atualização
+	servidorAtualizacao, err := getUpdateServerIP()
+	if err != nil {
+		fmt.Printf("Erro ao obter servidor de atualização: %v\n", err)
+		servidorAtualizacao = "desconhecido"
+	}
 
-	// Adicionar a versão do agente à estrutura
-	infoComVersao.VersaoAgente = versaoAgente
+	// Obter os intervalos de atualização
+	systemInfoUpdateInterval, err = getSystemInfoUpdateInterval()
+	if err != nil {
+		fmt.Printf("Erro ao obter intervalo de atualização: %v\n", err)
+		systemInfoUpdateInterval = 10
+	}
+
+	updateCheckInterval, err = getUpdateCheckInterval()
+	if err != nil {
+		fmt.Printf("Erro ao obter intervalo de verificação: %v\n", err)
+		updateCheckInterval = 10
+	}
+
+	// Criar uma cópia da estrutura para não modificar o cache
+	infoComAgente := cachedSystemInfo
+
+	// Adicionar as informações do agente à estrutura
+	infoComAgente.Agente = AgenteInfo{
+		VersaoAgente:             versaoAgente,
+		ServidorAtualizacao:      servidorAtualizacao,
+		SystemInfoUpdateInterval: fmt.Sprintf("%d", systemInfoUpdateInterval),
+		UpdateCheckInterval:      fmt.Sprintf("%d", updateCheckInterval),
+	}
 
 	// Converter para JSON
-	jsonData, err := json.MarshalIndent(infoComVersao, "", "  ")
+	jsonData, err := json.MarshalIndent(infoComAgente, "", "  ")
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Erro ao serializar dados: %v", err), http.StatusInternalServerError)
 		return

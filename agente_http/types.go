@@ -1,5 +1,13 @@
 package main
 
+// AgenteInfo representa as informações do agente
+type AgenteInfo struct {
+	VersaoAgente              string `json:"versao_agente"`
+	ServidorAtualizacao       string `json:"servidor_atualizacao"`
+	UpdateCheckInterval       string `json:"update_check_interval"`
+	SystemInfoUpdateInterval  string `json:"system_info_update_interval"`
+}
+
 // SystemInfo representa as informações do sistema
 type SystemInfo struct {
 	Sistema         map[string]interface{}   `json:"sistema"`
@@ -9,7 +17,6 @@ type SystemInfo struct {
 	Rede            map[string]interface{}   `json:"rede"`
 	GPU             interface{}              `json:"gpu"`
 	Processos       map[string]interface{}   `json:"processos"`
-	UsuariosLogados []string                 `json:"usuarios_logados"`
 	Hardware        interface{}              `json:"hardware"`
-	VersaoAgente    string                   `json:"versao_agente"`
+	Agente          AgenteInfo               `json:"agente"`
 }
