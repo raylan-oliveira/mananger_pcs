@@ -12,8 +12,6 @@ import (
 
 func main() {
 	// Configurar flags de linha de comando
-	agentIP := flag.String("agent", "", "IP do agente para atualizar (ex: 192.168.1.100:9999)")
-	updateIP := flag.String("update-ip", "", "Novo IP do servidor de atualização (ex: http://10.0.0.1:9991)")
 	flag.IntVar(&port, "port", 9991, "Porta do servidor HTTP")
 	flag.DurationVar(&readTimeout, "read-timeout", 10*time.Second, "Timeout para leitura de requisições")
 	flag.DurationVar(&writeTimeout, "write-timeout", 30*time.Second, "Timeout para escrita de respostas")
@@ -31,21 +29,6 @@ func main() {
 		log.Println("Chave privada carregada com sucesso")
 	}
 
-	// Verificar se é para atualizar um agente
-	if *agentIP != "" && *updateIP != "" {
-		if privateKey == nil {
-			log.Fatalf("Erro: Chave privada necessária para atualizar agentes")
-		}
-
-		err := updateAgentServerIP(*agentIP, *updateIP)
-		if err != nil {
-			log.Fatalf("Erro ao atualizar agente: %v", err)
-		}
-
-		log.Printf("Agente %s atualizado com sucesso para usar o servidor %s", *agentIP, *updateIP)
-		return
-	}
-
 	// Inicializar o mapa de clientes ativos
 	activeClients = make(map[string]int)
 
@@ -61,7 +44,6 @@ func main() {
 	// Registrar handlers
 	http.HandleFunc("/", fileServerHandler(fileServer))
 	http.HandleFunc("/stats", statsHandler)
-	http.HandleFunc("/api/update-server", handleUpdateServerIP)
 
 	// Configurar o servidor HTTP com timeouts e limites
 	server := &http.Server{

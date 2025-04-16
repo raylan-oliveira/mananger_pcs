@@ -1,11 +1,9 @@
 package main
 
 import (
-	"log"
 	"net"
 	"net/http"
 	"strings"
-	"time"
 )
 
 // getClientIP obtém o endereço IP real do cliente, considerando proxies
@@ -16,47 +14,21 @@ func getClientIP(r *http.Request) string {
 		ips := strings.Split(ip, ",")
 		return strings.TrimSpace(ips[0])
 	}
-
+	
 	if ip := r.Header.Get("X-Real-IP"); ip != "" {
 		return ip
 	}
-
+	
 	// Obter IP da conexão direta
 	ip, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
 		return r.RemoteAddr // Retornar como está se não puder separar
 	}
-
+	
 	return ip
-}
-
-// registerClient registra uma conexão de cliente
-func registerClient(ip string) {
-	clientsMutex.Lock()
-	defer clientsMutex.Unlock()
-
-	activeClients[ip]++
 }
 
 // isLocalRequest verifica se a requisição é de localhost
 func isLocalRequest(ip string) bool {
 	return ip == "127.0.0.1" || ip == "::1" || ip == "localhost"
-}
-
-// showClientStats exibe estatísticas de clientes periodicamente
-func showClientStats() {
-	ticker := time.NewTicker(1 * time.Minute)
-	defer ticker.Stop()
-
-	for range ticker.C {
-		clientsMutex.Lock()
-		if len(activeClients) > 0 {
-			log.Println("=== Clientes Conectados ===")
-			for ip, count := range activeClients {
-				log.Printf("IP: %s - Requisições: %d", ip, count)
-			}
-			log.Println("==========================")
-		}
-		clientsMutex.Unlock()
-	}
 }

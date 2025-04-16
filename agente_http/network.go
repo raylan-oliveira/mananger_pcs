@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// getLocalIPv4 returns the first non-loopback IPv4 address of the host
+// getLocalIPv4 retorna o primeiro endereço IPv4 não-loopback do host
 func getLocalIPv4() (string, error) {
 	interfaces, err := net.Interfaces()
 	if err != nil {

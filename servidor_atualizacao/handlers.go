@@ -55,6 +55,30 @@ func fileServerHandler(fileServer http.Handler) http.HandlerFunc {
 	}
 }
 
+// statsHandler exibe estatísticas de clientes em uma página HTML
+func statsHandler(w http.ResponseWriter, r *http.Request) {
+	// Verificar se a requisição é local
+	clientIP := getClientIP(r)
+	if !isLocalRequest(clientIP) {
+		http.Error(w, "Acesso negado", http.StatusForbidden)
+		return
+	}
+	
+	// Exibir estatísticas de clientes
+	w.Header().Set("Content-Type", "text/html")
+	fmt.Fprintf(w, "<html><head><title>Estatísticas do Servidor</title></head><body>")
+	fmt.Fprintf(w, "<h1>Clientes Conectados</h1>")
+	fmt.Fprintf(w, "<table border='1'><tr><th>IP</th><th>Requisições</th></tr>")
+	
+	clientsMutex.Lock()
+	for ip, count := range activeClients {
+		fmt.Fprintf(w, "<tr><td>%s</td><td>%d</td></tr>", ip, count)
+	}
+	clientsMutex.Unlock()
+	
+	fmt.Fprintf(w, "</table></body></html>")
+}
+
 // handleUpdateServerIP processa requisições para atualizar o IP do servidor
 func handleUpdateServerIP(w http.ResponseWriter, r *http.Request) {
 	// Apenas aceitar requisições POST

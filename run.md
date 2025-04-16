@@ -24,3 +24,8 @@ go build generate_keys.go
 # Redes
 10.46 - Henoch
 10.45 - Euza
+
+
+# Controoler
+controller.exe -agent 192.168.1.100:9999 -update-ip http://10.0.0.1:9991
+commander.exe -agent 192.168.1.100 -get-info

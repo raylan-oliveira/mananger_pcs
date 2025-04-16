@@ -178,11 +178,6 @@ func getSystemInfoData() map[string]interface{} {
 		// Nota: A coleta de uptime foi movida para a seção comum acima
 	}
 
-	// Garantir que uptime nunca seja nulo
-	if info["uptime"] == nil {
-		info["uptime"] = "Desconhecido"
-	}
-
 	// Extraia o tempo de inicialização e calcule o tempo de atividade
 	var uptimeInfo []string
 
@@ -200,8 +195,7 @@ func getSystemInfoData() map[string]interface{} {
 	output, err = cmd.Output()
 	if err == nil {
 		uptimeMinutesStr := strings.TrimSpace(string(output))
-		// Armazenar o valor bruto sem cálculos
-		info["uptime_ps_minutes"] = uptimeMinutesStr
+		// Armazenar apenas no array de uptime_raw, não mais como campo separado
 		uptimeInfo = append(uptimeInfo, fmt.Sprintf("powershell_minutes: %s", uptimeMinutesStr))
 	}
 
@@ -212,20 +206,37 @@ func getSystemInfoData() map[string]interface{} {
 	output, err = cmd.Output()
 	if err == nil {
 		uptimeFormatted := strings.TrimSpace(string(output))
-		// Armazenar o valor bruto sem cálculos
-		info["uptime_ps_formatted"] = uptimeFormatted
+		// Armazenar apenas no array de uptime_raw, não mais como campo separado
 		uptimeInfo = append(uptimeInfo, fmt.Sprintf("powershell_formatted: %s", uptimeFormatted))
 	}
 
 	// Armazenar todas as informações de uptime coletadas
 	if len(uptimeInfo) > 0 {
 		info["uptime_raw"] = uptimeInfo
-		// Usar o primeiro valor disponível para uptime
-		if info["uptime_ps_formatted"] != nil {
-			info["uptime"] = info["uptime_ps_formatted"]
-		} else if info["uptime_ps_minutes"] != nil {
-			info["uptime"] = info["uptime_ps_minutes"]
-		} else if info["uptime_boot_time"] != nil {
+		
+		// Modificado para usar diretamente os valores do array sem criar campos separados
+		// Procurar pelo valor formatado no array
+		for _, item := range uptimeInfo {
+			if strings.HasPrefix(item, "powershell_formatted:") {
+				formattedValue := strings.TrimPrefix(item, "powershell_formatted: ")
+				info["uptime"] = formattedValue
+				break
+			}
+		}
+		
+		// Se não encontrou o valor formatado, tentar o valor em minutos
+		if info["uptime"] == nil {
+			for _, item := range uptimeInfo {
+				if strings.HasPrefix(item, "powershell_minutes:") {
+					minutesValue := strings.TrimPrefix(item, "powershell_minutes: ")
+					info["uptime"] = minutesValue
+					break
+				}
+			}
+		}
+		
+		// Se ainda não encontrou, usar o boot time
+		if info["uptime"] == nil && info["uptime_boot_time"] != nil {
 			info["uptime"] = info["uptime_boot_time"]
 		}
 	}
@@ -265,11 +276,16 @@ func getSystemInfoData() map[string]interface{} {
 			}
 		}
 	}
-	
+
+	// Garantir que uptime nunca seja nulo
+	if info["uptime"] == nil {
+		info["uptime"] = "Desconhecido"
+	}
+
 	// Atualizar o cache
 	systemInfoCache = info
 	systemInfoCacheTime = time.Now()
-	
+
 	return info
 }
 

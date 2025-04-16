@@ -52,3 +52,21 @@ porque o host conectado não respondeu.
 [2025-04-15 22:13:10] Erro ao acessar servidor de atualizações: Get "http://192.168.1.5:9991/version.txt": dial tcp 192.168.1.5:9991: connectex: Nenhuma conexão pôde ser feita porque a máquina de destino as recusou ativamente.
 [2025-04-15 22:16:19] Erro ao acessar servidor de atualizações: Get "http://192.168.1.5:9991/version.txt": dial tcp 192.168.1.5:9991: connectex: Nenhuma conexão pôde ser feita porque a máquina de destino as recusou ativamente.
 [2025-04-15 22:16:39] Erro ao acessar servidor de atualizações: Get "http://192.168.1.5:9991/version.txt": dial tcp 192.168.1.5:9991: connectex: Nenhuma conexão pôde ser feita porque a máquina de destino as recusou ativamente.
+[2025-04-16 09:42:27] Erro ao acessar servidor de atualizações: Get "http://192.168.1.5:9991/version.txt": dial tcp 192.168.1.5:9991: connectex: Uma tentativa de conexão falhou porque o componente conectado não respondeu
+corretamente após um período de tempo ou a conexão estabelecida falhou
+porque o host conectado não respondeu.
+[2025-04-16 09:51:52] Erro ao acessar servidor de atualizações: Get "http://192.168.1.5:9991/version.txt": dial tcp 192.168.1.5:9991: connectex: Uma tentativa de conexão falhou porque o componente conectado não respondeu
+corretamente após um período de tempo ou a conexão estabelecida falhou
+porque o host conectado não respondeu.
+[2025-04-16 10:19:33] Erro ao acessar servidor de atualizações: Get "http://192.168.1.5:9991/version.txt": dial tcp 192.168.1.5:9991: connectex: Uma tentativa de conexão falhou porque o componente conectado não respondeu
+corretamente após um período de tempo ou a conexão estabelecida falhou
+porque o host conectado não respondeu.
+[2025-04-16 10:19:47] Erro ao acessar servidor de atualizações: Get "http://192.168.1.5:9991/version.txt": dial tcp 192.168.1.5:9991: connectex: Uma tentativa de conexão falhou porque o componente conectado não respondeu
+corretamente após um período de tempo ou a conexão estabelecida falhou
+porque o host conectado não respondeu.
+[2025-04-16 10:19:57] Erro ao acessar servidor de atualizações: Get "http://192.168.1.5:9991/version.txt": dial tcp 192.168.1.5:9991: connectex: Uma tentativa de conexão falhou porque o componente conectado não respondeu
+corretamente após um período de tempo ou a conexão estabelecida falhou
+porque o host conectado não respondeu.
+[2025-04-16 10:21:35] Erro ao acessar servidor de atualizações: Get "http://192.168.1.5:9991/version.txt": dial tcp 192.168.1.5:9991: connectex: Uma tentativa de conexão falhou porque o componente conectado não respondeu
+corretamente após um período de tempo ou a conexão estabelecida falhou
+porque o host conectado não respondeu.
