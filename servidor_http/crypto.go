@@ -15,6 +15,20 @@ import (
 	"path/filepath"
 )
 
+// Função para processar dados que podem estar criptografados ou não
+func processData(data []byte) (map[string]interface{}, error) {
+	// Primeiro, tentar interpretar como JSON não criptografado
+	var result map[string]interface{}
+	err := json.Unmarshal(data, &result)
+	if err == nil {
+		// Se conseguiu decodificar como JSON, retorna o resultado
+		return result, nil
+	}
+	
+	// Se não conseguiu decodificar como JSON, tenta descriptografar
+	return decryptData(data)
+}
+
 // Função para descriptografar dados usando a chave privada
 func decryptData(encryptedData []byte) (map[string]interface{}, error) {
 	// Decodificando de base64

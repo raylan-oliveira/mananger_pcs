@@ -45,7 +45,7 @@ func initDatabase() error {
 
 	// Inserir versão inicial se não existir
 	_, err = db.Exec(`
-		INSERT OR IGNORE INTO config (key, value) VALUES ('version', '1.0.0')
+		INSERT OR IGNORE INTO config (key, value) VALUES ('version', '0.0.1')
 	`)
 	if err != nil {
 		return fmt.Errorf("erro ao inserir versão inicial: %v", err)
@@ -53,7 +53,7 @@ func initDatabase() error {
 
 	// Inserir IP de atualização padrão se não existir
 	_, err = db.Exec(`
-		INSERT OR IGNORE INTO config (key, value) VALUES ('servidor_atualizacao', 'http://192.168.1.5:9991')
+		INSERT OR IGNORE INTO config (key, value) VALUES ('servidor_atualizacao', 'http://10.46.102.245:9991')
 	`)
 	if err != nil {
 		return fmt.Errorf("erro ao inserir IP de atualização padrão: %v", err)

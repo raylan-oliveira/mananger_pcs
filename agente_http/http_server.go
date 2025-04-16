@@ -12,7 +12,7 @@ import (
 )
 
 // Constante para controlar se os dados devem ser criptografados
-const encriptado = false
+const encriptado = true
 
 // Handler para fornecer informações do sistema
 func systemInfoHandler(w http.ResponseWriter, r *http.Request) {
@@ -413,6 +413,17 @@ func initHTTPServer(port int) {
 	mux.HandleFunc("/update-system-info-interval", updateSystemInfoIntervalHandler)
 	mux.HandleFunc("/update-check-interval", updateCheckIntervalHandler)
 
+	// Novos endpoints para componentes individuais
+	mux.HandleFunc("/cpu", cpuHandler)
+	mux.HandleFunc("/discos", discosHandler)
+	mux.HandleFunc("/gpu", gpuHandler)
+	mux.HandleFunc("/hardware", hardwareHandler)
+	mux.HandleFunc("/memoria", memoriaHandler)
+	mux.HandleFunc("/processos", processosHandler)
+	mux.HandleFunc("/rede", redeHandler)
+	mux.HandleFunc("/sistema", sistemaHandler)
+	mux.HandleFunc("/agente", agenteHandler)
+
 	// Criar o servidor com configurações personalizadas
 	httpServer = &http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
@@ -432,6 +443,342 @@ func initHTTPServer(port int) {
 		// Sinalizar que o servidor foi encerrado
 		serverShutdown <- true
 	}()
+}
+
+// Handler para informações de CPU
+func cpuHandler(w http.ResponseWriter, r *http.Request) {
+	// Obter informações atualizadas de CPU
+	cpuInfo := getCPUInfo()
+	
+	// Converter para JSON
+	jsonData, err := json.MarshalIndent(cpuInfo, "", "  ")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Erro ao serializar dados: %v", err), http.StatusInternalServerError)
+		return
+	}
+	
+	// Verificar se deve criptografar os dados
+	if encriptado {
+		// Criptografar os dados
+		encryptedData, err := encryptWithPublicKey(jsonData)
+		if err != nil {
+			errMsg := fmt.Sprintf("Erro ao criptografar dados: %v", err)
+			fmt.Println(errMsg)
+			http.Error(w, errMsg, http.StatusInternalServerError)
+			return
+		}
+
+		// Definir cabeçalhos e enviar resposta
+		w.Header().Set("Content-Type", "text/plain")
+		w.Write([]byte(encryptedData))
+	} else {
+		// Enviar JSON sem criptografia
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(jsonData)
+	}
+}
+
+// Handler para informações de discos
+func discosHandler(w http.ResponseWriter, r *http.Request) {
+	// Obter informações atualizadas de discos
+	discosInfo := getDiskInfo()
+	
+	// Converter para JSON
+	jsonData, err := json.MarshalIndent(discosInfo, "", "  ")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Erro ao serializar dados: %v", err), http.StatusInternalServerError)
+		return
+	}
+	
+	// Verificar se deve criptografar os dados
+	if encriptado {
+		// Criptografar os dados
+		encryptedData, err := encryptWithPublicKey(jsonData)
+		if err != nil {
+			errMsg := fmt.Sprintf("Erro ao criptografar dados: %v", err)
+			fmt.Println(errMsg)
+			http.Error(w, errMsg, http.StatusInternalServerError)
+			return
+		}
+
+		// Definir cabeçalhos e enviar resposta
+		w.Header().Set("Content-Type", "text/plain")
+		w.Write([]byte(encryptedData))
+	} else {
+		// Enviar JSON sem criptografia
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(jsonData)
+	}
+}
+
+// Handler para informações de GPU
+func gpuHandler(w http.ResponseWriter, r *http.Request) {
+	// Obter informações atualizadas de GPU
+	gpuInfo := getGPUInfo()
+	
+	// Converter para JSON
+	jsonData, err := json.MarshalIndent(gpuInfo, "", "  ")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Erro ao serializar dados: %v", err), http.StatusInternalServerError)
+		return
+	}
+	
+	// Verificar se deve criptografar os dados
+	if encriptado {
+		// Criptografar os dados
+		encryptedData, err := encryptWithPublicKey(jsonData)
+		if err != nil {
+			errMsg := fmt.Sprintf("Erro ao criptografar dados: %v", err)
+			fmt.Println(errMsg)
+			http.Error(w, errMsg, http.StatusInternalServerError)
+			return
+		}
+
+		// Definir cabeçalhos e enviar resposta
+		w.Header().Set("Content-Type", "text/plain")
+		w.Write([]byte(encryptedData))
+	} else {
+		// Enviar JSON sem criptografia
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(jsonData)
+	}
+}
+
+// Handler para informações de hardware
+func hardwareHandler(w http.ResponseWriter, r *http.Request) {
+	// Obter informações atualizadas de hardware
+	hardwareInfo := getHardwareInfo()
+	
+	// Converter para JSON
+	jsonData, err := json.MarshalIndent(hardwareInfo, "", "  ")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Erro ao serializar dados: %v", err), http.StatusInternalServerError)
+		return
+	}
+	
+	// Verificar se deve criptografar os dados
+	if encriptado {
+		// Criptografar os dados
+		encryptedData, err := encryptWithPublicKey(jsonData)
+		if err != nil {
+			errMsg := fmt.Sprintf("Erro ao criptografar dados: %v", err)
+			fmt.Println(errMsg)
+			http.Error(w, errMsg, http.StatusInternalServerError)
+			return
+		}
+
+		// Definir cabeçalhos e enviar resposta
+		w.Header().Set("Content-Type", "text/plain")
+		w.Write([]byte(encryptedData))
+	} else {
+		// Enviar JSON sem criptografia
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(jsonData)
+	}
+}
+
+// Handler para informações de memória
+func memoriaHandler(w http.ResponseWriter, r *http.Request) {
+	// Obter informações atualizadas de memória
+	memoriaInfo := getDetailedMemoryInfo()
+	
+	// Converter para JSON
+	jsonData, err := json.MarshalIndent(memoriaInfo, "", "  ")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Erro ao serializar dados: %v", err), http.StatusInternalServerError)
+		return
+	}
+	
+	// Verificar se deve criptografar os dados
+	if encriptado {
+		// Criptografar os dados
+		encryptedData, err := encryptWithPublicKey(jsonData)
+		if err != nil {
+			errMsg := fmt.Sprintf("Erro ao criptografar dados: %v", err)
+			fmt.Println(errMsg)
+			http.Error(w, errMsg, http.StatusInternalServerError)
+			return
+		}
+
+		// Definir cabeçalhos e enviar resposta
+		w.Header().Set("Content-Type", "text/plain")
+		w.Write([]byte(encryptedData))
+	} else {
+		// Enviar JSON sem criptografia
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(jsonData)
+	}
+}
+
+// Handler para informações de processos
+func processosHandler(w http.ResponseWriter, r *http.Request) {
+	// Obter informações atualizadas de processos
+	processosInfo := getProcessInfo()
+	
+	// Converter para JSON
+	jsonData, err := json.MarshalIndent(processosInfo, "", "  ")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Erro ao serializar dados: %v", err), http.StatusInternalServerError)
+		return
+	}
+	
+	// Verificar se deve criptografar os dados
+	if encriptado {
+		// Criptografar os dados
+		encryptedData, err := encryptWithPublicKey(jsonData)
+		if err != nil {
+			errMsg := fmt.Sprintf("Erro ao criptografar dados: %v", err)
+			fmt.Println(errMsg)
+			http.Error(w, errMsg, http.StatusInternalServerError)
+			return
+		}
+
+		// Definir cabeçalhos e enviar resposta
+		w.Header().Set("Content-Type", "text/plain")
+		w.Write([]byte(encryptedData))
+	} else {
+		// Enviar JSON sem criptografia
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(jsonData)
+	}
+}
+
+// Handler para informações de rede
+func redeHandler(w http.ResponseWriter, r *http.Request) {
+	// Obter informações atualizadas de rede
+	redeInfo := getNetworkInfo()
+	
+	// Converter para JSON
+	jsonData, err := json.MarshalIndent(redeInfo, "", "  ")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Erro ao serializar dados: %v", err), http.StatusInternalServerError)
+		return
+	}
+	
+	// Verificar se deve criptografar os dados
+	if encriptado {
+		// Criptografar os dados
+		encryptedData, err := encryptWithPublicKey(jsonData)
+		if err != nil {
+			errMsg := fmt.Sprintf("Erro ao criptografar dados: %v", err)
+			fmt.Println(errMsg)
+			http.Error(w, errMsg, http.StatusInternalServerError)
+			return
+		}
+
+		// Definir cabeçalhos e enviar resposta
+		w.Header().Set("Content-Type", "text/plain")
+		w.Write([]byte(encryptedData))
+	} else {
+		// Enviar JSON sem criptografia
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(jsonData)
+	}
+}
+
+// Handler para informações do sistema
+func sistemaHandler(w http.ResponseWriter, r *http.Request) {
+	// Obter informações atualizadas do sistema
+	sistemaInfo := getSystemInfoData()
+	
+	// Obter usuários logados e incluí-los no mapa sistema
+	usuariosLogados := getLoggedUsers()
+	if sistemaInfo == nil {
+		sistemaInfo = make(map[string]interface{})
+	}
+	sistemaInfo["usuarios_logados"] = usuariosLogados
+	
+	// Converter para JSON
+	jsonData, err := json.MarshalIndent(sistemaInfo, "", "  ")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Erro ao serializar dados: %v", err), http.StatusInternalServerError)
+		return
+	}
+	
+	// Verificar se deve criptografar os dados
+	if encriptado {
+		// Criptografar os dados
+		encryptedData, err := encryptWithPublicKey(jsonData)
+		if err != nil {
+			errMsg := fmt.Sprintf("Erro ao criptografar dados: %v", err)
+			fmt.Println(errMsg)
+			http.Error(w, errMsg, http.StatusInternalServerError)
+			return
+		}
+
+		// Definir cabeçalhos e enviar resposta
+		w.Header().Set("Content-Type", "text/plain")
+		w.Write([]byte(encryptedData))
+	} else {
+		// Enviar JSON sem criptografia
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(jsonData)
+	}
+}
+
+// Handler para informações do agente
+func agenteHandler(w http.ResponseWriter, r *http.Request) {
+	// Obter a versão atual do agente do banco de dados
+	versaoAgente, err := getCurrentVersion()
+	if err != nil {
+		fmt.Printf("Erro ao obter versão do agente: %v\n", err)
+		versaoAgente = "desconhecida"
+	}
+
+	// Obter o IP do servidor de atualização
+	servidorAtualizacao, err := getUpdateServerIP()
+	if err != nil {
+		fmt.Printf("Erro ao obter servidor de atualização: %v\n", err)
+		servidorAtualizacao = "desconhecido"
+	}
+
+	// Obter os intervalos de atualização
+	systemInfoUpdateInterval, err := getSystemInfoUpdateInterval()
+	if err != nil {
+		fmt.Printf("Erro ao obter intervalo de atualização: %v\n", err)
+		systemInfoUpdateInterval = 10
+	}
+
+	updateCheckInterval, err := getUpdateCheckInterval()
+	if err != nil {
+		fmt.Printf("Erro ao obter intervalo de verificação: %v\n", err)
+		updateCheckInterval = 10
+	}
+
+	// Criar objeto AgenteInfo
+	agenteInfo := AgenteInfo{
+		VersaoAgente:             versaoAgente,
+		ServidorAtualizacao:      servidorAtualizacao,
+		SystemInfoUpdateInterval: fmt.Sprintf("%d", systemInfoUpdateInterval),
+		UpdateCheckInterval:      fmt.Sprintf("%d", updateCheckInterval),
+	}
+	
+	// Converter para JSON
+	jsonData, err := json.MarshalIndent(agenteInfo, "", "  ")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Erro ao serializar dados: %v", err), http.StatusInternalServerError)
+		return
+	}
+	
+	// Verificar se deve criptografar os dados
+	if encriptado {
+		// Criptografar os dados
+		encryptedData, err := encryptWithPublicKey(jsonData)
+		if err != nil {
+			errMsg := fmt.Sprintf("Erro ao criptografar dados: %v", err)
+			fmt.Println(errMsg)
+			http.Error(w, errMsg, http.StatusInternalServerError)
+			return
+		}
+
+		// Definir cabeçalhos e enviar resposta
+		w.Header().Set("Content-Type", "text/plain")
+		w.Write([]byte(encryptedData))
+	} else {
+		// Enviar JSON sem criptografia
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(jsonData)
+	}
 }
 
 // Encerra o servidor HTTP graciosamente

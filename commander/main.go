@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 )
 
 func main() {
 	// Configurar flags de linha de comando
-	agentIP := flag.String("agent", "", "IP do agente para atualizar (ex: 192.168.1.100:9999)")
-	updateIP := flag.String("update-ip", "", "Novo IP do servidor de atualização (ex: http://10.0.0.1:9991)")
-	getInfo := flag.Bool("get-info", false, "Obter informações detalhadas do agente")
+	agentIP := flag.String("agent", "", "IP do agente para atualizar (ex: 192.168.1.100:9999 or 192.168.1.100)")
+	updateIP := flag.String("update-ip", "", "Novo IP do servidor de atualização (ex: http://10.0.0.1:9991 or 10.0.0.1:9991)")
+	getInfo := flag.String("info", "", "Obter informações detalhadas do agente. Opções: tudo, cpu, discos, gpu, hardware, memoria, processos, rede, sistema, agente")
 	timeout := flag.Int("timeout", 5, "Timeout em segundos para requisições")
 	sysInfoInterval := flag.Int("sys-interval", 0, "Atualizar intervalo de coleta de informações do sistema (em minutos)")
 	updateInterval := flag.Int("update-interval", 0, "Atualizar intervalo de verificação de atualizações (em minutos)")
@@ -73,15 +74,50 @@ func main() {
 	}
 
 	// Verificar se é para obter informações do agente
-	if *agentIP != "" && *getInfo {
+	if *agentIP != "" && *getInfo != "" {
 		if privateKey == nil {
 			log.Fatalf("Erro: Chave privada necessária para obter informações criptografadas")
 		}
 
-		log.Printf("Consultando agente em %s...", *agentIP)
-		info, err := getAgentInfo(*agentIP, *timeout)
+		// Determinar qual endpoint consultar
+		endpoint := strings.ToLower(*getInfo)
+
+		// Se for "tudo" ou vazio, consultar o endpoint principal
+		if endpoint == "tudo" || endpoint == "" {
+			log.Printf("Consultando todas as informações do agente em %s...", *agentIP)
+			info, err := getAgentInfo(*agentIP, *timeout, "")
+			if err != nil {
+				log.Fatalf("Erro ao obter informações do agente: %v", err)
+			}
+
+			// Exibir o JSON formatado
+			jsonData, err := json.MarshalIndent(info, "", "  ")
+			if err != nil {
+				log.Fatalf("Erro ao formatar JSON: %v", err)
+			}
+			fmt.Println(string(jsonData))
+			return
+		}
+
+		// Verificar se o endpoint é válido
+		validEndpoints := []string{"cpu", "discos", "gpu", "hardware", "memoria", "processos", "rede", "sistema", "agente"}
+		isValid := false
+		for _, valid := range validEndpoints {
+			if endpoint == valid {
+				isValid = true
+				break
+			}
+		}
+
+		if !isValid {
+			log.Fatalf("Endpoint inválido: %s. Opções válidas: tudo, cpu, discos, gpu, hardware, memoria, processos, rede, sistema, agente", endpoint)
+		}
+
+		// Consultar o endpoint específico
+		log.Printf("Consultando informações de %s do agente em %s...", endpoint, *agentIP)
+		info, err := getAgentInfo(*agentIP, *timeout, endpoint)
 		if err != nil {
-			log.Fatalf("Erro ao obter informações do agente: %v", err)
+			log.Fatalf("Erro ao obter informações de %s do agente: %v", endpoint, err)
 		}
 
 		// Exibir o JSON formatado

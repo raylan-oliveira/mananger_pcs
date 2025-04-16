@@ -1,0 +1,80 @@
+C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\commander>commander.exe -agent 10.46.102.245 -info rede
+2025/04/16 14:22:01 Chave privada carregada com sucesso
+2025/04/16 14:22:01 Consultando informações de rede do agente em 10.46.102.245...
+{
+  "dns_servers": [
+    "fec0:0:0:ffff::1",
+    "fec0:0:0:ffff::2",
+    "fec0:0:0:ffff::3",
+    "10.46.60.2",
+    "10.47.60.24",
+    "10.47.60.2"
+  ],
+  "interfaces": [
+    {
+      "descricao": "Realtek RTL8852AE WiFi 6 802.11ax PCIe Adapter",
+      "ipv4": [
+        "169.254.241.113"
+      ],
+      "ipv6": [
+        "fe80::13f8:547a:1c08:3ea3"
+      ],
+      "mac": "c0:35:32:50:46:95",
+      "nome": "Wi-Fi",
+      "status": "\"Disconnected\"",
+      "velocidade": "0 bps"
+    },
+    {
+      "descricao": "Não disponível",
+      "ipv4": [
+        "169.254.79.182"
+      ],
+      "ipv6": [
+        "fe80::a372:2e74:5ec9:cc59"
+      ],
+      "mac": "c2:35:32:50:46:95",
+      "nome": "Conexão Local* 9",
+      "status": "Desconhecido",
+      "velocidade": "Desconhecido"
+    },
+    {
+      "descricao": "Não disponível",
+      "ipv4": [
+        "169.254.128.33"
+      ],
+      "ipv6": [
+        "fe80::c473:712a:e2ad:202a"
+      ],
+      "mac": "c6:35:32:50:46:95",
+      "nome": "Conexão Local* 10",
+      "status": "Desconhecido",
+      "velocidade": "Desconhecido"
+    },
+    {
+      "descricao": "Realtek PCIe GbE Family Controller",
+      "ipv4": [
+        "10.46.102.245"
+      ],
+      "ipv6": [
+        "fe80::2815:938c:aec3:491e"
+      ],
+      "mac": "60:c7:27:18:6f:44",
+      "nome": "Ethernet 2",
+      "status": "\"Up\"",
+      "velocidade": "100 Mbps"
+    },
+    {
+      "descricao": "Não disponível",
+      "ipv4": [
+        "169.254.28.80"
+      ],
+      "ipv6": [
+        "fe80::9bd3:f232:948:6581"
+      ],
+      "mac": "c0:35:32:50:46:96",
+      "nome": "Conexão de Rede Bluetooth",
+      "status": "Desconhecido",
+      "velocidade": "Desconhecido"
+    }
+  ]
+}

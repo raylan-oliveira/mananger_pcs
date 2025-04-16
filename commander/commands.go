@@ -188,7 +188,7 @@ func updateAgentConfig(agentIP string, config map[string]interface{}) error {
 */
 
 // getAgentInfo obtém informações detalhadas de um agente
-func getAgentInfo(agentIP string, timeout int) (map[string]interface{}, error) {
+func getAgentInfo(agentIP string, timeout int, endpoint string) (map[string]interface{}, error) {
 	// Verificar se o agentIP inclui a porta
 	if !strings.Contains(agentIP, ":") {
 		agentIP = agentIP + ":9999" // Porta padrão do agente
@@ -199,8 +199,17 @@ func getAgentInfo(agentIP string, timeout int) (map[string]interface{}, error) {
 		Timeout: time.Duration(timeout) * time.Second,
 	}
 	
-	// Solicitar dados criptografados
-	url := fmt.Sprintf("http://%s?encrypt=true", agentIP)
+	// Construir a URL com base no endpoint
+	var url string
+	if endpoint == "" {
+		// Endpoint principal para todas as informações
+		url = fmt.Sprintf("http://%s?encrypt=true", agentIP)
+	} else {
+		// Endpoint específico
+		url = fmt.Sprintf("http://%s/%s?encrypt=true", agentIP, endpoint)
+	}
+	
+	// Solicitar dados
 	resp, err := client.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("erro ao conectar com o agente: %v", err)

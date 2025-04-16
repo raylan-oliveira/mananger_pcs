@@ -28,6 +28,6 @@ go build generate_keys.go
 
 # Controoler
 commander.exe -agent 10.46.102.245:9999 -update-ip http://10.46.102.245:9991
-commander.exe -agent 10.46.102.245 -get-info
+commander.exe -agent 10.46.102.245 -info
 commander.exe -agent 10.46.102.245 -sys-interval 15
 commander.exe -agent 10.46.102.245 -update-interval 30

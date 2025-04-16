@@ -29,8 +29,8 @@ func consultarAgente(ip string, port int, timeout time.Duration, retries int) (m
 			Timeout: timeout,
 		}
 		
-		// Modificado para solicitar dados criptografados
-		resp, err := client.Get(fmt.Sprintf("http://%s:%d?encrypt=true", ip, port))
+		// Consultando o agente (sem parâmetro encrypt=true)
+		resp, err := client.Get(fmt.Sprintf("http://%s:%d", ip, port))
 		if err != nil {
 			if attempt < retries {
 				fmt.Printf("Erro de conexão com %s. Tentando novamente (%d/%d)...\n", ip, attempt+1, retries)
@@ -63,16 +63,16 @@ func consultarAgente(ip string, port int, timeout time.Duration, retries int) (m
 			return nil, fmt.Errorf("erro ao ler resposta: %v", err)
 		}
 		
-		// Descriptografando a resposta
-		info, err := decryptData(body)
+		// Processando a resposta (criptografada ou não)
+		info, err := processData(body)
 		if err != nil {
 			if attempt < retries {
-				fmt.Printf("Erro ao descriptografar resposta de %s: %v. Tentando novamente (%d/%d)...\n", 
+				fmt.Printf("Erro ao processar resposta de %s: %v. Tentando novamente (%d/%d)...\n", 
 					ip, err, attempt+1, retries)
 				time.Sleep(time.Second)
 				continue
 			}
-			return nil, fmt.Errorf("erro ao descriptografar: %v", err)
+			return nil, fmt.Errorf("erro ao processar dados: %v", err)
 		}
 		
 		return info, nil

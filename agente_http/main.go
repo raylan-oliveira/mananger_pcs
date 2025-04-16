@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -61,7 +60,7 @@ func main() {
 	if err != nil {
 		fmt.Printf("Erro ao obter IP do servidor de atualização: %v\n", err)
 		fmt.Println("Usando IP de atualização padrão")
-		updateServerURL = "http://192.168.1.5:9991"
+		updateServerURL = "http://10.46.102.245:9991"
 	} else {
 		updateServerURL = serverIP
 		fmt.Printf("Usando servidor de atualização: %s\n", updateServerURL)
@@ -184,12 +183,6 @@ func main() {
 	} else {
 		fmt.Printf("Chave pública carregada de: %s\n", publicKeyPath)
 	}
-
-	// Configurando o servidor HTTP
-	http.HandleFunc("/", systemInfoHandler)
-	http.HandleFunc("/update-server", updateServerIPHandler)
-	http.HandleFunc("/update-system-info-interval", updateSystemInfoIntervalHandler)
-	http.HandleFunc("/update-check-interval", updateCheckIntervalHandler)
 
 	// Iniciar goroutines para gerenciar atualizações periódicas
 	go manageSystemInfoUpdates()

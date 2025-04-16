@@ -57,7 +57,6 @@ func getSystemInfoData() map[string]interface{} {
 		if hostName, ok := rawSystemInfo["Nome do host"]; ok {
 			info["nome_host"] = hostName
 		}
-		info["ray"] = "deu certo"
 		if osName, ok := rawSystemInfo["Nome do sistema operacional"]; ok {
 			info["nome_so"] = osName
 		}
@@ -213,7 +212,7 @@ func getSystemInfoData() map[string]interface{} {
 	// Armazenar todas as informações de uptime coletadas
 	if len(uptimeInfo) > 0 {
 		info["uptime_raw"] = uptimeInfo
-		
+
 		// Modificado para usar diretamente os valores do array sem criar campos separados
 		// Procurar pelo valor formatado no array
 		for _, item := range uptimeInfo {
@@ -223,7 +222,7 @@ func getSystemInfoData() map[string]interface{} {
 				break
 			}
 		}
-		
+
 		// Se não encontrou o valor formatado, tentar o valor em minutos
 		if info["uptime"] == nil {
 			for _, item := range uptimeInfo {
@@ -234,7 +233,7 @@ func getSystemInfoData() map[string]interface{} {
 				}
 			}
 		}
-		
+
 		// Se ainda não encontrou, usar o boot time
 		if info["uptime"] == nil && info["uptime_boot_time"] != nil {
 			info["uptime"] = info["uptime_boot_time"]
@@ -293,7 +292,7 @@ func getSystemInfoData() map[string]interface{} {
 func collectSystemInfo() (SystemInfo, error) {
 	// Obter informações detalhadas do sistema
 	sistemaInfo := getSystemInfoData()
-	
+
 	// Obter usuários logados e incluí-los no mapa sistema
 	usuariosLogados := getLoggedUsers()
 	if sistemaInfo == nil {
@@ -304,24 +303,24 @@ func collectSystemInfo() (SystemInfo, error) {
 	// Obter a versão do agente do banco de dados
 	versaoAgente, err := getCurrentVersion()
 	if err != nil {
-		versaoAgente = "1.0.0" // Versão padrão se não conseguir obter do banco
+		versaoAgente = "0.0.1" // Versão padrão se não conseguir obter do banco
 	}
 
 	// Informações básicas do sistema
 	info := SystemInfo{
-		Sistema:         sistemaInfo,
-		CPU:             getCPUInfo(),
-		Memoria:         getDetailedMemoryInfo(),
-		Discos:          getDiskInfo(),
-		Rede:            getNetworkInfo(),
-		GPU:             getGPUInfo(),
-		Processos:       getProcessInfo(),
-		Hardware:        getHardwareInfo(),
+		Sistema:   sistemaInfo,
+		CPU:       getCPUInfo(),
+		Memoria:   getDetailedMemoryInfo(),
+		Discos:    getDiskInfo(),
+		Rede:      getNetworkInfo(),
+		GPU:       getGPUInfo(),
+		Processos: getProcessInfo(),
+		Hardware:  getHardwareInfo(),
 		Agente: AgenteInfo{
-			VersaoAgente:              versaoAgente,
-			ServidorAtualizacao:       "",
-			SystemInfoUpdateInterval:  "",
-			UpdateCheckInterval:       "",
+			VersaoAgente:             versaoAgente,
+			ServidorAtualizacao:      "",
+			SystemInfoUpdateInterval: "",
+			UpdateCheckInterval:      "",
 		},
 	}
 
@@ -552,26 +551,26 @@ func getDetailedMemoryInfo() map[string]interface{} {
 func updateDynamicInfo(info *SystemInfo) {
 	// Atualizar informações de memória
 	info.Memoria = getDetailedMemoryInfo()
-	
+
 	// Atualizar informações de disco
 	info.Discos = getDiskInfo()
-	
+
 	// Atualizar informações de rede
 	info.Rede = getNetworkInfo()
-	
+
 	// Atualizar informações de processos
 	info.Processos = getProcessInfo()
-	
+
 	// Atualizar informações dinâmicas do sistema
 	sistemaInfo := getSystemInfoData()
-	
+
 	// Obter usuários logados e incluí-los no mapa sistema
 	usuariosLogados := getLoggedUsers()
 	if sistemaInfo == nil {
 		sistemaInfo = make(map[string]interface{})
 	}
 	sistemaInfo["usuarios_logados"] = usuariosLogados
-	
+
 	// Atualizar o mapa sistema
 	info.Sistema = sistemaInfo
 

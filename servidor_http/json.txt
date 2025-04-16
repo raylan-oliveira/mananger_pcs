@@ -1,0 +1,220 @@
+{
+  "sistema": {
+    "arquitetura": "amd64",
+    "nome_host": "FHRFILESERVER03",
+    "nome_so": "Microsoft Windows 11 Pro",
+    "uptime": 1394,
+    "uptime_raw": [
+      "powershell_minutes: 1394,04143742833",
+      "powershell_formatted: 0d 23h 14m"
+    ],
+    "usuarios_logados": [
+      "TJAM\\gabriel.alecrim"
+    ],
+    "versao_compilacao": "10.0.22631"
+  },
+  "cpu": {
+    "modelo": "Intel(R) Core(TM) i5-3330 CPU @ 3.00GHz",
+    "nucleos": 4
+  },
+  "memoria": {
+    "disponivel_gb": 9.439285278320312,
+    "modulos_memoria": [
+      {
+        "capacidade_gb": 4,
+        "slot": "ChannelA-DIMM0",
+        "velocidade": 0,
+        "velocidade_configurada": 1333
+      },
+      {
+        "capacidade_gb": 4,
+        "slot": "ChannelA-DIMM1",
+        "velocidade": 0,
+        "velocidade_configurada": 1333
+      },
+      {
+        "capacidade_gb": 2,
+        "slot": "ChannelB-DIMM0",
+        "velocidade": 0,
+        "velocidade_configurada": 1333
+      }
+    ],
+    "percentual_uso": 600954140692484,
+    "total_gb": 2.9273757934570312,
+    "usada_gb": 17592186044409.488,
+    "velocidade_mhz": 0
+  },
+  "discos": [
+    {
+      "dispositivo": "C:",
+      "livre_gb": 17.974185943603516,
+      "percentual_uso": 83.82411671401915,
+      "sistema_arquivos": "NTFS",
+      "total_gb": 111.11718368530273,
+      "usado_gb": 93.14299774169922
+    },
+    {
+      "dispositivo": "D:",
+      "livre_gb": 30.452438354492188,
+      "percentual_uso": 93.46175760521828,
+      "sistema_arquivos": "NTFS",
+      "total_gb": 465.75878524780273,
+      "usado_gb": 435.30634689331055
+    },
+    {
+      "dispositivo": "E:",
+      "livre_gb": 0,
+      "percentual_uso": 0,
+      "sistema_arquivos": "",
+      "total_gb": 0,
+      "usado_gb": 0
+    },
+    {
+      "dispositivo": "Z:",
+      "livre_gb": 157.7911033630371,
+      "percentual_uso": 73.70148277282715,
+      "sistema_arquivos": "NTFS",
+      "total_gb": 600,
+      "usado_gb": 442.2088966369629
+    }
+  ],
+  "rede": {
+    "dns_servers": [
+      "10.46.60.2",
+      "10.47.60.24",
+      "fec0:0:0:ffff::1",
+      "fec0:0:0:ffff::2",
+      "fec0:0:0:ffff::3"
+    ],
+    "interfaces": [
+      {
+        "descricao": "Realtek PCIe GbE Family Controller",
+        "ipv4": [
+          "10.46.102.213"
+        ],
+        "ipv6": [
+          "fe80::977d:2216:7e17:152e"
+        ],
+        "mac": "00:c5:4a:54:ed:63",
+        "nome": "Ethernet",
+        "status": "\"Up\"",
+        "velocidade": "100 Mbps"
+      }
+    ]
+  },
+  "gpu": [
+    {
+      "memoria_gb": 2.5,
+      "nome": "Intel(R) HD Graphics",
+      "versao_driver": "10.18.10.4252"
+    }
+  ],
+  "processos": {
+    "top_5_cpu": [
+      {
+        "cpu": "479.546875",
+        "memoria_mb": 198.359375,
+        "nome": "chrome",
+        "pid": "22404"
+      },
+      {
+        "cpu": "311.3125",
+        "memoria_mb": 400.58203125,
+        "nome": "chrome",
+        "pid": "24064"
+      },
+      {
+        "cpu": "142.8125",
+        "memoria_mb": 12.43359375,
+        "nome": "services",
+        "pid": "784"
+      },
+      {
+        "cpu": "141.6875",
+        "memoria_mb": 81.23046875,
+        "nome": "chrome",
+        "pid": "21576"
+      },
+      {
+        "cpu": "132.96875",
+        "memoria_mb": 205.07421875,
+        "nome": "chrome",
+        "pid": "17268"
+      }
+    ],
+    "top_5_memoria": [
+      {
+        "cpu": "47.125",
+        "memoria_mb": 804.453125,
+        "nome": "Memory Compression",
+        "pid": "2092"
+      },
+      {
+        "cpu": "95.25",
+        "memoria_mb": 443.78515625,
+        "nome": "chrome",
+        "pid": "21432"
+      },
+      {
+        "cpu": "311.3125",
+        "memoria_mb": 400.58203125,
+        "nome": "chrome",
+        "pid": "24064"
+      },
+      {
+        "cpu": "10.71875",
+        "memoria_mb": 222.34375,
+        "nome": "explorer",
+        "pid": "11920"
+      },
+      {
+        "cpu": "132.96875",
+        "memoria_mb": 205.07421875,
+        "nome": "chrome",
+        "pid": "17268"
+      }
+    ],
+    "total": 465
+  },
+  "hardware": {
+    "bios_fabricante": "Desenvolvida por Positivo Informatica SA",
+    "bios_nome": "0104K.U",
+    "bios_registro": {
+      "BIOSReleaseDate": "02/11/2014",
+      "BIOSVendor": "Desenvolvida por Positivo Informatica SA",
+      "BIOSVersion": "0104K.U",
+      "BaseBoardManufacturer": "Positivo Informatica SA",
+      "BaseBoardProduct": "POS-PIB75CX",
+      "BaseBoardVersion": "POSITIVO",
+      "BiosMajorRelease": "0x4",
+      "BiosMinorRelease": "0x6",
+      "ECFirmwareMajorRelease": "0xff",
+      "ECFirmwareMinorRelease": "0xff",
+      "EnclosureType": "0x3",
+      "SystemFamily": "To be filled by O.E.M.",
+      "SystemManufacturer": "Positivo Informatica SA",
+      "SystemProductName": "POS-PIB75CX",
+      "SystemSKU": "1502505",
+      "SystemVersion": "0104K_U_CNJ"
+    },
+    "fabricante": "Positivo Informatica SA",
+    "familia": "To be filled by O.E.M.",
+    "modelo": "POS-PIB75CX",
+    "numero_serie": "1AB92YS8C",
+    "placa_mae": {
+      "fabricante": "Positivo Informatica SA",
+      "modelo": "POS-PIB75CX",
+      "numero_serie": "POSITIVO",
+      "versao": "1AB92YS8C"
+    },
+    "smbios_versao": "POSITI - 1072009",
+    "tipo_sistema": "x64-based PC",
+    "versao_bios": "0104K.U"
+  },
+  "agente": {
+    "versao_agente": "0.0.38",
+    "servidor_atualizacao": "http://10.46.102.245:9991",
+    "update_check_interval": "20",
+    "system_info_update_interval": "10"
+  }
+}
