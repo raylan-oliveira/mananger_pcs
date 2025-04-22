@@ -196,7 +196,7 @@ func main() {
 	go manageUpdateChecks()
 
 	// Inicializar o servidor HTTP
-	initHTTPServer(port)
+	initHTTPServer(port) // Change to use server package
 
 	// Aguardar sinal para encerrar o programa
 	waitForShutdown()
@@ -212,7 +212,7 @@ func waitForShutdown() {
 	<-sigs
 
 	// Encerrar servidor HTTP
-	shutdownHTTPServer()
+	shutdownHTTPServer() // Change to use server package
 
 	fmt.Println("Programa encerrado")
 }
@@ -355,12 +355,12 @@ func isPortInUse(port int) bool {
 	// Tenta fazer um bind na porta para verificar se está disponível
 	address := fmt.Sprintf(":%d", port)
 	listener, err := net.Listen("tcp", address)
-	
+
 	// Se não conseguir fazer o bind, a porta está em uso
 	if err != nil {
 		return true
 	}
-	
+
 	// Se conseguiu fazer o bind, a porta está livre
 	// Fecha o listener para liberar a porta
 	listener.Close()

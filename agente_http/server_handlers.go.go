@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -398,65 +397,18 @@ func updateCheckIntervalHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("Intervalo de verificação de atualizações alterado para: %d minutos\n", request.Intervalo)
 }
 
-// Variáveis globais para controle do servidor HTTP
-var (
-	httpServer     *http.Server
-	serverShutdown chan bool
-)
-
-// Inicializa o servidor HTTP
-func initHTTPServer(port int) {
-	// Configurando o servidor HTTP
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", systemInfoHandler)
-	mux.HandleFunc("/update-server", updateServerIPHandler)
-	mux.HandleFunc("/update-system-info-interval", updateSystemInfoIntervalHandler)
-	mux.HandleFunc("/update-check-interval", updateCheckIntervalHandler)
-
-	// Novos endpoints para componentes individuais
-	mux.HandleFunc("/cpu", cpuHandler)
-	mux.HandleFunc("/discos", discosHandler)
-	mux.HandleFunc("/gpu", gpuHandler)
-	mux.HandleFunc("/hardware", hardwareHandler)
-	mux.HandleFunc("/memoria", memoriaHandler)
-	mux.HandleFunc("/processos", processosHandler)
-	mux.HandleFunc("/rede", redeHandler)
-	mux.HandleFunc("/sistema", sistemaHandler)
-	mux.HandleFunc("/agente", agenteHandler)
-
-	// Criar o servidor com configurações personalizadas
-	httpServer = &http.Server{
-		Addr:    fmt.Sprintf(":%d", port),
-		Handler: mux,
-	}
-
-	// Canal para sinalizar encerramento
-	serverShutdown = make(chan bool)
-
-	// Iniciar o servidor em uma goroutine
-	go func() {
-		fmt.Printf("Iniciando servidor HTTP na porta %d em todas as interfaces de rede...\n", port)
-		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			fmt.Printf("Erro ao iniciar servidor HTTP: %v\n", err)
-		}
-
-		// Sinalizar que o servidor foi encerrado
-		serverShutdown <- true
-	}()
-}
-
 // Handler para informações de CPU
 func cpuHandler(w http.ResponseWriter, r *http.Request) {
 	// Obter informações atualizadas de CPU
 	cpuInfo := getCPUInfo()
-	
+
 	// Converter para JSON
 	jsonData, err := json.MarshalIndent(cpuInfo, "", "  ")
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Erro ao serializar dados: %v", err), http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Verificar se deve criptografar os dados
 	if encriptado {
 		// Criptografar os dados
@@ -482,14 +434,19 @@ func cpuHandler(w http.ResponseWriter, r *http.Request) {
 func discosHandler(w http.ResponseWriter, r *http.Request) {
 	// Obter informações atualizadas de discos
 	discosInfo := getDiskInfo()
-	
+
+	// Criar um mapa para encapsular o array
+	response := map[string]interface{}{
+		"discos": discosInfo,
+	}
+
 	// Converter para JSON
-	jsonData, err := json.MarshalIndent(discosInfo, "", "  ")
+	jsonData, err := json.MarshalIndent(response, "", "  ")
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Erro ao serializar dados: %v", err), http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Verificar se deve criptografar os dados
 	if encriptado {
 		// Criptografar os dados
@@ -515,14 +472,19 @@ func discosHandler(w http.ResponseWriter, r *http.Request) {
 func gpuHandler(w http.ResponseWriter, r *http.Request) {
 	// Obter informações atualizadas de GPU
 	gpuInfo := getGPUInfo()
-	
+
+	// Criar um mapa para encapsular o array
+	response := map[string]interface{}{
+		"gpu": gpuInfo,
+	}
+
 	// Converter para JSON
-	jsonData, err := json.MarshalIndent(gpuInfo, "", "  ")
+	jsonData, err := json.MarshalIndent(response, "", "  ")
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Erro ao serializar dados: %v", err), http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Verificar se deve criptografar os dados
 	if encriptado {
 		// Criptografar os dados
@@ -548,14 +510,14 @@ func gpuHandler(w http.ResponseWriter, r *http.Request) {
 func hardwareHandler(w http.ResponseWriter, r *http.Request) {
 	// Obter informações atualizadas de hardware
 	hardwareInfo := getHardwareInfo()
-	
+
 	// Converter para JSON
 	jsonData, err := json.MarshalIndent(hardwareInfo, "", "  ")
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Erro ao serializar dados: %v", err), http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Verificar se deve criptografar os dados
 	if encriptado {
 		// Criptografar os dados
@@ -581,14 +543,14 @@ func hardwareHandler(w http.ResponseWriter, r *http.Request) {
 func memoriaHandler(w http.ResponseWriter, r *http.Request) {
 	// Obter informações atualizadas de memória
 	memoriaInfo := getDetailedMemoryInfo()
-	
+
 	// Converter para JSON
 	jsonData, err := json.MarshalIndent(memoriaInfo, "", "  ")
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Erro ao serializar dados: %v", err), http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Verificar se deve criptografar os dados
 	if encriptado {
 		// Criptografar os dados
@@ -614,14 +576,14 @@ func memoriaHandler(w http.ResponseWriter, r *http.Request) {
 func processosHandler(w http.ResponseWriter, r *http.Request) {
 	// Obter informações atualizadas de processos
 	processosInfo := getProcessInfo()
-	
+
 	// Converter para JSON
 	jsonData, err := json.MarshalIndent(processosInfo, "", "  ")
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Erro ao serializar dados: %v", err), http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Verificar se deve criptografar os dados
 	if encriptado {
 		// Criptografar os dados
@@ -647,14 +609,14 @@ func processosHandler(w http.ResponseWriter, r *http.Request) {
 func redeHandler(w http.ResponseWriter, r *http.Request) {
 	// Obter informações atualizadas de rede
 	redeInfo := getNetworkInfo()
-	
+
 	// Converter para JSON
 	jsonData, err := json.MarshalIndent(redeInfo, "", "  ")
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Erro ao serializar dados: %v", err), http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Verificar se deve criptografar os dados
 	if encriptado {
 		// Criptografar os dados
@@ -680,21 +642,21 @@ func redeHandler(w http.ResponseWriter, r *http.Request) {
 func sistemaHandler(w http.ResponseWriter, r *http.Request) {
 	// Obter informações atualizadas do sistema
 	sistemaInfo := getSystemInfoData()
-	
+
 	// Obter usuários logados e incluí-los no mapa sistema
 	usuariosLogados := getLoggedUsers()
 	if sistemaInfo == nil {
 		sistemaInfo = make(map[string]interface{})
 	}
 	sistemaInfo["usuarios_logados"] = usuariosLogados
-	
+
 	// Converter para JSON
 	jsonData, err := json.MarshalIndent(sistemaInfo, "", "  ")
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Erro ao serializar dados: %v", err), http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Verificar se deve criptografar os dados
 	if encriptado {
 		// Criptografar os dados
@@ -752,14 +714,14 @@ func agenteHandler(w http.ResponseWriter, r *http.Request) {
 		SystemInfoUpdateInterval: fmt.Sprintf("%d", systemInfoUpdateInterval),
 		UpdateCheckInterval:      fmt.Sprintf("%d", updateCheckInterval),
 	}
-	
+
 	// Converter para JSON
 	jsonData, err := json.MarshalIndent(agenteInfo, "", "  ")
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Erro ao serializar dados: %v", err), http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Verificar se deve criptografar os dados
 	if encriptado {
 		// Criptografar os dados
@@ -778,25 +740,5 @@ func agenteHandler(w http.ResponseWriter, r *http.Request) {
 		// Enviar JSON sem criptografia
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(jsonData)
-	}
-}
-
-// Encerra o servidor HTTP graciosamente
-func shutdownHTTPServer() {
-	if httpServer != nil {
-		fmt.Println("Encerrando servidor HTTP...")
-
-		// Criar contexto com timeout para encerramento gracioso
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-
-		// Tentar encerrar o servidor graciosamente
-		if err := httpServer.Shutdown(ctx); err != nil {
-			fmt.Printf("Erro ao encerrar servidor HTTP: %v\n", err)
-		}
-
-		// Aguardar sinal de encerramento
-		<-serverShutdown
-		fmt.Println("Servidor HTTP encerrado com sucesso")
 	}
 }

@@ -23,3 +23,4 @@ go.work
 agente_http/system_info.db
 agente_http/.recent_update
 agente_http/.update_success
+agente_http/update_errors.txt

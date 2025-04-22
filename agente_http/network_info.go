@@ -16,7 +16,8 @@ func getNetworkInfo() map[string]interface{} {
 		var networkInterfaces []map[string]interface{}
 		
 		// Obter informações detalhadas das interfaces usando PowerShell
-		cmd := exec.Command("powershell", "-Command", "Get-NetAdapter | Select-Object Name, InterfaceDescription, Status, MacAddress, LinkSpeed | ConvertTo-Json")
+		cmd := exec.Command("powershell", "-Command", 
+			"Get-NetAdapter | Select-Object Name, InterfaceDescription, Status, MacAddress, LinkSpeed | ConvertTo-Json")
 		output, err := cmd.Output()
 		
 		// Mapa para armazenar informações detalhadas das interfaces
@@ -37,6 +38,29 @@ func getNetworkInfo() map[string]interface{} {
 						"status": match[3],
 						"mac": match[4],
 						"velocidade": match[5],
+					}
+				}
+			}
+		}
+		
+		// Método alternativo usando WMIC se o PowerShell falhar
+		if len(detailedInfo) == 0 {
+			cmd = exec.Command("wmic", "nic", "get", "Name,MACAddress,NetConnectionStatus,Speed", "/format:csv")
+			output, err = cmd.Output()
+			if err == nil {
+				lines := strings.Split(string(output), "\n")
+				for _, line := range lines {
+					if strings.Contains(line, ",") && !strings.Contains(line, "Node") {
+						parts := strings.Split(line, ",")
+						if len(parts) >= 4 {
+							name := strings.TrimSpace(parts[1])
+							detailedInfo[name] = map[string]string{
+								"descricao": name,
+								"status": strings.TrimSpace(parts[3]),
+								"mac": strings.TrimSpace(parts[2]),
+								"velocidade": strings.TrimSpace(parts[4]),
+							}
+						}
 					}
 				}
 			}
@@ -71,15 +95,12 @@ func getNetworkInfo() map[string]interface{} {
 				var ipv6 []string
 				
 				for _, addr := range addrs {
-					ipNet, ok := addr.(*net.IPNet)
-					if !ok {
-						continue
-					}
-					
-					if ipNet.IP.To4() != nil {
-						ipv4 = append(ipv4, ipNet.IP.String())
-					} else {
-						ipv6 = append(ipv6, ipNet.IP.String())
+					if ipnet, ok := addr.(*net.IPNet); ok {
+						if ip4 := ipnet.IP.To4(); ip4 != nil {
+							ipv4 = append(ipv4, ip4.String())
+						} else {
+							ipv6 = append(ipv6, ipnet.IP.String())
+						}
 					}
 				}
 				
@@ -87,7 +108,10 @@ func getNetworkInfo() map[string]interface{} {
 				netInterface["ipv6"] = ipv6
 			}
 			
-			networkInterfaces = append(networkInterfaces, netInterface)
+			// Só adicionar interfaces que têm pelo menos um endereço IP
+			if len(netInterface["ipv4"].([]string)) > 0 || len(netInterface["ipv6"].([]string)) > 0 {
+				networkInterfaces = append(networkInterfaces, netInterface)
+			}
 		}
 		
 		info["interfaces"] = networkInterfaces

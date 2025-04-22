@@ -26,8 +26,12 @@ go build generate_keys.go
 10.45 - Euza
 
 
-# Controoler
+# Commander
 commander.exe -agent 10.46.102.245:9999 -update-ip http://10.46.102.245:9991
 commander.exe -agent 10.46.102.245 -info
 commander.exe -agent 10.46.102.245 -sys-interval 15
 commander.exe -agent 10.46.102.245 -update-interval 30
+
+commander.exe -agent all -update-ip http://10.46.102.245:9991
+commander.exe -agent all -sys-interval 15
+commander.exe -agent all -update-interval 30

@@ -11,12 +11,12 @@ import (
 
 func main() {
 	// Configurar flags de linha de comando
-	agentIP := flag.String("agent", "", "IP do agente para atualizar (ex: 192.168.1.100:9999 or 192.168.1.100)")
-	updateIP := flag.String("update-ip", "", "Novo IP do servidor de atualização (ex: http://10.0.0.1:9991 or 10.0.0.1:9991)")
+	agentIP := flag.String("agent", "", "IP do agente para atualizar (ex: 192.168.1.100:9999 or 192.168.1.100 or 'all' para todos os agentes)")
 	getInfo := flag.String("info", "", "Obter informações detalhadas do agente. Opções: tudo, cpu, discos, gpu, hardware, memoria, processos, rede, sistema, agente")
-	timeout := flag.Int("timeout", 5, "Timeout em segundos para requisições")
+	updateIP := flag.String("update-ip", "", "Atualizar o IP do servidor de atualização")
 	sysInfoInterval := flag.Int("sys-interval", 0, "Atualizar intervalo de coleta de informações do sistema (em minutos)")
 	updateInterval := flag.Int("update-interval", 0, "Atualizar intervalo de verificação de atualizações (em minutos)")
+	timeout := flag.Int("timeout", 5, "Timeout em segundos para requisições")
 	flag.Parse()
 
 	// Carregar a chave privada
@@ -34,6 +34,25 @@ func main() {
 			log.Fatalf("Erro: Chave privada necessária para atualizar agentes")
 		}
 
+		if *agentIP == "all" {
+			// Obter todos os IPs dos agentes
+			ips, err := getAllAgentIPs()
+			if err != nil {
+				log.Fatalf("Erro ao obter IPs dos agentes: %v", err)
+			}
+
+			// Atualizar cada agente
+			for _, ip := range ips {
+				err := updateAgentServerIP(ip, *updateIP)
+				if err != nil {
+					log.Printf("Erro ao atualizar agente %s: %v", ip, err)
+					continue
+				}
+				log.Printf("Agente %s atualizado com sucesso para usar o servidor %s", ip, *updateIP)
+			}
+			return
+		}
+
 		err := updateAgentServerIP(*agentIP, *updateIP)
 		if err != nil {
 			log.Fatalf("Erro ao atualizar agente: %v", err)
@@ -49,6 +68,25 @@ func main() {
 			log.Fatalf("Erro: Chave privada necessária para atualizar configurações")
 		}
 
+		if *agentIP == "all" {
+			// Obter todos os IPs dos agentes
+			ips, err := getAllAgentIPs()
+			if err != nil {
+				log.Fatalf("Erro ao obter IPs dos agentes: %v", err)
+			}
+
+			// Atualizar cada agente
+			for _, ip := range ips {
+				err := updateSystemInfoInterval(ip, *sysInfoInterval)
+				if err != nil {
+					log.Printf("Erro ao atualizar intervalo de coleta do agente %s: %v", ip, err)
+					continue
+				}
+				log.Printf("Intervalo de coleta de informações do sistema atualizado para %d minutos no agente %s", *sysInfoInterval, ip)
+			}
+			return
+		}
+
 		err := updateSystemInfoInterval(*agentIP, *sysInfoInterval)
 		if err != nil {
 			log.Fatalf("Erro ao atualizar intervalo de coleta: %v", err)
@@ -62,6 +100,25 @@ func main() {
 	if *agentIP != "" && *updateInterval > 0 {
 		if privateKey == nil {
 			log.Fatalf("Erro: Chave privada necessária para atualizar configurações")
+		}
+
+		if *agentIP == "all" {
+			// Obter todos os IPs dos agentes
+			ips, err := getAllAgentIPs()
+			if err != nil {
+				log.Fatalf("Erro ao obter IPs dos agentes: %v", err)
+			}
+
+			// Atualizar cada agente
+			for _, ip := range ips {
+				err := updateCheckInterval(ip, *updateInterval)
+				if err != nil {
+					log.Printf("Erro ao atualizar intervalo de verificação do agente %s: %v", ip, err)
+					continue
+				}
+				log.Printf("Intervalo de verificação de atualizações atualizado para %d minutos no agente %s", *updateInterval, ip)
+			}
+			return
 		}
 
 		err := updateCheckInterval(*agentIP, *updateInterval)
