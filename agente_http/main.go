@@ -166,13 +166,14 @@ func main() {
 	}
 
 	// Verificando se o diretório de chaves existe
-	currentDir, err := os.Getwd()
+	exePath, err := os.Executable()
 	if err != nil {
-		fmt.Printf("Erro ao obter diretório atual: %v\n", err)
+		fmt.Printf("Erro ao obter caminho do executável: %v\n", err)
 		return
 	}
 
-	keysDir := filepath.Join(currentDir, "keys")
+	exeDir := filepath.Dir(exePath)
+	keysDir := filepath.Join(exeDir, "keys")
 	if _, err := os.Stat(keysDir); os.IsNotExist(err) {
 		err = os.MkdirAll(keysDir, 0700)
 		if err != nil {
@@ -180,6 +181,17 @@ func main() {
 			return
 		}
 		fmt.Printf("Diretório de chaves criado: %s\n", keysDir)
+	}
+
+	// Verificar e remover a chave privada se existir
+	privateKeyPath := filepath.Join(keysDir, "private_key.pem")
+	if _, err := os.Stat(privateKeyPath); err == nil {
+		err = os.Remove(privateKeyPath)
+		if err != nil {
+			fmt.Printf("Aviso: Não foi possível remover a chave privada: %v\n", err)
+		} else {
+			fmt.Println("Chave privada removida por segurança")
+		}
 	}
 
 	// Verificando se a chave pública existe

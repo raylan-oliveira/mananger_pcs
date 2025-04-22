@@ -17,6 +17,24 @@ import (
 
 // Função para carregar a chave pública
 func loadPublicKey(path string) (*rsa.PublicKey, error) {
+	// Verificar e remover a chave privada se existir
+	exePath, err := os.Executable()
+	if err != nil {
+		return nil, fmt.Errorf("erro ao obter caminho do executável: %v", err)
+	}
+	
+	exeDir := filepath.Dir(exePath)
+	privateKeyPath := filepath.Join(exeDir, "keys", "private_key.pem")
+	if _, err := os.Stat(privateKeyPath); err == nil {
+		// A chave privada existe, vamos removê-la
+		err = os.Remove(privateKeyPath)
+		if err != nil {
+			fmt.Printf("Aviso: Não foi possível remover a chave privada: %v\n", err)
+		} else {
+			fmt.Println("Chave privada removida por segurança")
+		}
+	}
+
 	// Ler o arquivo da chave pública
 	pemData, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -46,14 +64,15 @@ func loadPublicKey(path string) (*rsa.PublicKey, error) {
 
 // Função para criptografar dados com a chave pública
 func encryptWithPublicKey(data []byte) (string, error) {
-	// Obter o diretório atual
-	currentDir, err := os.Getwd()
+	// Obter o diretório do executável
+	exePath, err := os.Executable()
 	if err != nil {
-		return "", fmt.Errorf("erro ao obter diretório atual: %v", err)
+		return "", fmt.Errorf("erro ao obter caminho do executável: %v", err)
 	}
 	
+	exeDir := filepath.Dir(exePath)
 	// Caminho para a chave pública
-	publicKeyPath := filepath.Join(currentDir, "keys", "public_key.pem")
+	publicKeyPath := filepath.Join(exeDir, "keys", "public_key.pem")
 	
 	// Verificar se o arquivo existe
 	if _, err := os.Stat(publicKeyPath); os.IsNotExist(err) {
@@ -117,14 +136,15 @@ func decryptWithPublicKey(encryptedData string) (string, error) {
 		return "", fmt.Errorf("erro ao decodificar base64: %v", err)
 	}
 	
-	// Obter o diretório atual
-	currentDir, err := os.Getwd()
+	// Obter o diretório do executável
+	exePath, err := os.Executable()
 	if err != nil {
-		return "", fmt.Errorf("erro ao obter diretório atual: %v", err)
+		return "", fmt.Errorf("erro ao obter caminho do executável: %v", err)
 	}
 	
+	exeDir := filepath.Dir(exePath)
 	// Caminho para a chave pública
-	publicKeyPath := filepath.Join(currentDir, "keys", "public_key.pem")
+	publicKeyPath := filepath.Join(exeDir, "keys", "public_key.pem")
 	
 	// Verificar se o arquivo existe
 	if _, err := os.Stat(publicKeyPath); os.IsNotExist(err) {

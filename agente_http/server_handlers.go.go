@@ -117,15 +117,16 @@ func systemInfoHandler(w http.ResponseWriter, r *http.Request) {
 	if encriptado {
 		// Criptografar os dados
 		// Verificar se a chave pública existe
-		currentDir, err := os.Getwd()
+		exePath, err := os.Executable()
 		if err != nil {
-			errMsg := fmt.Sprintf("Erro ao obter diretório atual: %v", err)
+			errMsg := fmt.Sprintf("Erro ao obter caminho do executável: %v", err)
 			fmt.Println(errMsg)
 			http.Error(w, errMsg, http.StatusInternalServerError)
 			return
 		}
 
-		keysDir := filepath.Join(currentDir, "keys")
+		exeDir := filepath.Dir(exePath)
+		keysDir := filepath.Join(exeDir, "keys")
 		publicKeyPath := filepath.Join(keysDir, "public_key.pem")
 
 		if _, err := os.Stat(publicKeyPath); os.IsNotExist(err) {

@@ -61,7 +61,7 @@ func initDatabase() error {
 
 	// Inserir intervalo de atualização de informações do sistema padrão se não existir
 	_, err = db.Exec(`
-		INSERT OR IGNORE INTO config (key, value) VALUES ('system_info_update_interval', '10')
+		INSERT OR IGNORE INTO config (key, value) VALUES ('system_info_update_interval', '30')
 	`)
 	if err != nil {
 		return fmt.Errorf("erro ao inserir intervalo de atualização padrão: %v", err)
@@ -69,7 +69,7 @@ func initDatabase() error {
 
 	// Inserir intervalo de verificação de atualizações padrão se não existir
 	_, err = db.Exec(`
-		INSERT OR IGNORE INTO config (key, value) VALUES ('update_check_interval', '10')
+		INSERT OR IGNORE INTO config (key, value) VALUES ('update_check_interval', '30')
 	`)
 	if err != nil {
 		return fmt.Errorf("erro ao inserir intervalo de verificação de atualizações padrão: %v", err)
