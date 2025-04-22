@@ -410,6 +410,8 @@ func getCPUInfo() map[string]interface{} {
 func getDetailedMemoryInfo() map[string]interface{} {
 	info := make(map[string]interface{})
 
+	// Comando WMIC para obter memória total e livre em formato CSV
+	// wmic OS get TotalVisibleMemorySize,FreePhysicalMemory /format:csv
 	cmd := exec.Command("wmic", "OS", "get", "TotalVisibleMemorySize,FreePhysicalMemory", "/format:csv")
 	output, err := cmd.Output()
 	if err == nil {
@@ -419,15 +421,8 @@ func getDetailedMemoryInfo() map[string]interface{} {
 				parts := strings.Split(line, ",")
 				if len(parts) >= 3 {
 					totalKB := parseUint64(strings.TrimSpace(parts[1]))
-					freeKB := parseUint64(strings.TrimSpace(parts[2]))
-					usedKB := totalKB - freeKB
 
-					info["total_gb"] = float64(totalKB) / 1024 / 1024
-					info["disponivel_gb"] = float64(freeKB) / 1024 / 1024
-					info["usada_gb"] = float64(usedKB) / 1024 / 1024
-					if totalKB > 0 {
-						info["percentual_uso"] = float64(usedKB) * 100 / float64(totalKB)
-					}
+					info["total"] = totalKB
 					break
 				}
 			}
@@ -436,6 +431,8 @@ func getDetailedMemoryInfo() map[string]interface{} {
 
 	// Se o primeiro método falhar, tente uma abordagem alternativa
 	if len(info) == 0 {
+		// Comando PowerShell para obter memória total e livre
+		// PowerShell -Command "$os = Get-WmiObject Win32_OperatingSystem; $total = $os.TotalVisibleMemorySize; $free = $os.FreePhysicalMemory; Write-Host \"$total,$free\""
 		cmd := exec.Command("powershell", "-Command",
 			"$os = Get-WmiObject Win32_OperatingSystem; "+
 				"$total = $os.TotalVisibleMemorySize; "+
@@ -446,20 +443,14 @@ func getDetailedMemoryInfo() map[string]interface{} {
 			parts := strings.Split(strings.TrimSpace(string(output)), ",")
 			if len(parts) >= 2 {
 				totalKB := parseUint64(parts[0])
-				freeKB := parseUint64(parts[1])
-				usedKB := totalKB - freeKB
 
-				info["total_gb"] = float64(totalKB) / 1024 / 1024
-				info["disponivel_gb"] = float64(freeKB) / 1024 / 1024
-				info["usada_gb"] = float64(usedKB) / 1024 / 1024
-				if totalKB > 0 {
-					info["percentual_uso"] = float64(usedKB) * 100 / float64(totalKB)
-				}
+				info["total"] = totalKB
 			}
 		}
 	}
 
 	// Obter informações sobre a velocidade da memória usando wmic
+	// wmic memorychip get speed
 	cmd = exec.Command("wmic", "memorychip", "get", "speed")
 	output, err = cmd.Output()
 	if err == nil {
@@ -481,6 +472,7 @@ func getDetailedMemoryInfo() map[string]interface{} {
 	}
 
 	// Obter informações mais detalhadas sobre a memória usando PowerShell
+	// PowerShell -Command "Get-CimInstance -ClassName Win32_PhysicalMemory | ForEach-Object { [PSCustomObject]@{ Slot=$_.DeviceLocator; Speed=$_.Speed; ConfiguredSpeed=$_.ConfiguredClockSpeed } } | ConvertTo-Json"
 	cmd = exec.Command("powershell", "-Command",
 		"Get-CimInstance -ClassName Win32_PhysicalMemory | ForEach-Object { [PSCustomObject]@{ Slot=$_.DeviceLocator; Speed=$_.Speed; ConfiguredSpeed=$_.ConfiguredClockSpeed } } | ConvertTo-Json")
 	output, err = cmd.Output()
@@ -492,6 +484,7 @@ func getDetailedMemoryInfo() map[string]interface{} {
 		var memoryModules []map[string]interface{}
 
 		// Usar PowerShell para converter o JSON para um formato mais fácil de processar
+		// PowerShell -Command "$memInfo = Get-CimInstance -ClassName Win32_PhysicalMemory | Select-Object DeviceLocator, Speed, ConfiguredClockSpeed, Capacity; $memInfo | ForEach-Object { $slot = $_.DeviceLocator; $speed = $_.Speed; $configSpeed = $_.ConfiguredClockSpeed; $capacity = $_.Capacity; Write-Host \"$slot|$speed|$configSpeed|$capacity\" }"
 		cmd = exec.Command("powershell", "-Command",
 			"$memInfo = Get-CimInstance -ClassName Win32_PhysicalMemory | "+
 				"Select-Object DeviceLocator, Speed, ConfiguredClockSpeed, Capacity; "+
@@ -537,10 +530,7 @@ func getDetailedMemoryInfo() map[string]interface{} {
 
 	// Garantindo valores padrão se não houver dados
 	if len(info) == 0 {
-		info["total_gb"] = 0.0
-		info["disponivel_gb"] = 0.0
-		info["usada_gb"] = 0.0
-		info["percentual_uso"] = 0.0
+		info["total"] = 0.0
 	}
 
 	return info
@@ -576,6 +566,8 @@ func updateDynamicInfo(info *SystemInfo) {
 
 	// Atualizando informações de processos
 	if runtime.GOOS == "windows" {
+		// Comando WMIC para obter lista de IDs de processos
+		// wmic process get ProcessId
 		cmd := exec.Command("wmic", "process", "get", "ProcessId")
 		output, err := cmd.Output()
 		if err == nil {

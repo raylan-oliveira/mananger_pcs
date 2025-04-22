@@ -48,7 +48,7 @@ func systemInfoHandler(w http.ResponseWriter, r *http.Request) {
 	// Verificar se é hora de verificar atualizações (baseado na configuração)
 	if time.Since(lastUpdateCheckTime).Minutes() >= float64(updateCheckInterval) {
 		fmt.Printf("Verificando atualizações disponíveis (intervalo: %d minutos)...\n", updateCheckInterval)
-		updateAvailable, latestVersion, err := checkForUpdates()
+		updateAvailable, latestVersion, err := checkForUpdates(false) // Passar false para verificações periódicas
 		if err != nil {
 			fmt.Printf("Aviso: Não foi possível verificar atualizações: %v\n", err)
 		} else if updateAvailable {

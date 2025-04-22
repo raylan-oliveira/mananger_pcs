@@ -18,7 +18,7 @@ func main() {
 		redes = []string{"192.168.1.0/24"} // Usando rede padrão como fallback
 		fmt.Printf("Usando rede padrão: %s\n", redes[0])
 	}
-	
+
 	port := 9999
 	intervaloConsulta := 300 * time.Second // 5 minutos
 	maxWorkers := 25
@@ -67,7 +67,7 @@ func main() {
 		for _, rede := range redes {
 			fmt.Printf("\nEscaneando rede: %s\n", rede)
 			agentesRede := descobrirAgentes(rede, port, maxWorkers)
-			
+
 			// Adicionar ao mapa principal
 			for ip, info := range agentesRede {
 				agentes[ip] = info
@@ -110,7 +110,7 @@ func main() {
 
 			// Extrair informações da memória
 			if memoria, ok := info["memoria"].(map[string]interface{}); ok {
-				if totalGB, ok := memoria["total_gb"]; ok {
+				if totalGB, ok := memoria["total"]; ok {
 					fmt.Printf("Memória RAM: %.2f GB\n", totalGB)
 				} else {
 					fmt.Println("Memória RAM: N/A")

@@ -24,3 +24,12 @@ agente_http/system_info.db
 agente_http/.recent_update
 agente_http/.update_success
 agente_http/update_errors.txt
+agente_http/update_errors.txt
+agente_http/version.txt
+
+# Keys
+*.key
+*.pem
+*.csr
+*.cert
+*.rnd

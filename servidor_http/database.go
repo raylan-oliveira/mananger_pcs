@@ -69,7 +69,7 @@ func createTables(db *sql.DB) error {
 			ip_address TEXT,
 			os_name TEXT,
 			cpu_model TEXT,
-			ram_total REAL,
+			ram_total INTEGER,
 			disk_c_total REAL,
 			agent_version TEXT,
 			servidor_atualizacao TEXT,
@@ -178,7 +178,7 @@ func saveComputerInfo(info map[string]interface{}, ip string) error {
 
 	// Extrair RAM
 	if memoria, ok := info["memoria"].(map[string]interface{}); ok {
-		if total, ok := memoria["total_gb"].(float64); ok {
+		if total, ok := memoria["total"].(float64); ok {
 			ramTotal = total
 		}
 	}

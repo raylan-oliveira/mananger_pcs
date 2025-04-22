@@ -57,11 +57,13 @@ func logUpdateError(message string) {
 }
 
 // checkForUpdates verifica se há atualizações disponíveis
-func checkForUpdates() (bool, string, error) {
-	// Adicionar um delay aleatório entre 1 e 3 minutos
-	delaySeconds := time.Duration(MinUpdateDelay + rand.Intn(MaxUpdateDelayAdd)) // Gera um número entre 60 e 180 segundos
-	logUpdateError(fmt.Sprintf("Aguardando %d segundos antes de verificar atualizações...", delaySeconds))
-	time.Sleep(delaySeconds * time.Second)
+func checkForUpdates(isInitialCheck bool) (bool, string, error) {
+	// Adicionar delay apenas se não for verificação inicial
+	if !isInitialCheck {
+		delaySeconds := time.Duration(MinUpdateDelay + rand.Intn(MaxUpdateDelayAdd)) // Gera um número entre 60 e 180 segundos
+		logUpdateError(fmt.Sprintf("Aguardando %d segundos antes de verificar atualizações...", delaySeconds))
+		time.Sleep(delaySeconds * time.Second)
+	}
 
 	// Verificar se estamos em um processo de atualização recente
 	if isRecentlyUpdated() {

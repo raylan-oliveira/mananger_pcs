@@ -95,7 +95,7 @@ func main() {
 
 	// Verificar atualizações
 	fmt.Println("Verificando atualizações disponíveis...")
-	updateAvailable, latestVersion, err := checkForUpdates()
+	updateAvailable, latestVersion, err := checkForUpdates(true) // Passar true para indicar que é verificação inicial
 	if err != nil {
 		fmt.Printf("Aviso: Não foi possível verificar atualizações: %v\n", err)
 	} else if updateAvailable {
@@ -324,42 +324,42 @@ func manageSystemInfoUpdates() {
 
 // manageUpdateChecks gerencia as verificações periódicas de atualizações
 func manageUpdateChecks() {
-	// Definir o ticker inicial
-	ticker := time.NewTicker(time.Duration(updateCheckIntervalMinutes) * time.Minute)
-	defer ticker.Stop()
+    // Definir o ticker inicial
+    ticker := time.NewTicker(time.Duration(updateCheckIntervalMinutes) * time.Minute)
+    defer ticker.Stop()
 
-	for {
-		select {
-		case <-ticker.C:
-			// É hora de verificar atualizações
-			fmt.Printf("Verificando atualizações disponíveis (intervalo: %d minutos)...\n", updateCheckIntervalMinutes)
-			updateAvailable, latestVersion, err := checkForUpdates()
-			if err != nil {
-				fmt.Printf("Aviso: Não foi possível verificar atualizações: %v\n", err)
-			} else if updateAvailable {
-				fmt.Printf("Nova versão disponível: %s. Baixando atualização...\n", latestVersion)
-				err = downloadAndUpdate(latestVersion)
-				if err != nil {
-					fmt.Printf("Erro ao baixar atualização: %v\n", err)
-				} else {
-					fmt.Println("Atualização baixada com sucesso. O aplicativo será reiniciado.")
-					// Reiniciar o aplicativo
-					restartApplication()
-					return
-				}
-			} else {
-				fmt.Println("O aplicativo está atualizado.")
-			}
+    for {
+        select {
+        case <-ticker.C:
+            // É hora de verificar atualizações
+            fmt.Printf("Verificando atualizações disponíveis (intervalo: %d minutos)...\n", updateCheckIntervalMinutes)
+            updateAvailable, latestVersion, err := checkForUpdates(false) // Passar false para verificações periódicas
+            if err != nil {
+                fmt.Printf("Aviso: Não foi possível verificar atualizações: %v\n", err)
+            } else if updateAvailable {
+                fmt.Printf("Nova versão disponível: %s. Baixando atualização...\n", latestVersion)
+                err = downloadAndUpdate(latestVersion)
+                if err != nil {
+                    fmt.Printf("Erro ao baixar atualização: %v\n", err)
+                } else {
+                    fmt.Println("Atualização baixada com sucesso. O aplicativo será reiniciado.")
+                    // Reiniciar o aplicativo
+                    restartApplication()
+                    return
+                }
+            } else {
+                fmt.Println("O aplicativo está atualizado.")
+            }
 
-			lastUpdateCheckTime = time.Now()
+            lastUpdateCheckTime = time.Now()
 
-		case <-updateCheckIntervalChanged:
-			// O intervalo foi alterado, recriar o ticker
-			ticker.Stop()
-			ticker = time.NewTicker(time.Duration(updateCheckIntervalMinutes) * time.Minute)
-			fmt.Printf("Intervalo de verificação de atualizações alterado para: %d minutos\n", updateCheckIntervalMinutes)
-		}
-	}
+        case <-updateCheckIntervalChanged:
+            // O intervalo foi alterado, recriar o ticker
+            ticker.Stop()
+            ticker = time.NewTicker(time.Duration(updateCheckIntervalMinutes) * time.Minute)
+            fmt.Printf("Intervalo de verificação de atualizações alterado para: %d minutos\n", updateCheckIntervalMinutes)
+        }
+    }
 }
 
 // isPortInUse verifica se a porta especificada já está em uso
