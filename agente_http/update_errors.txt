@@ -216,3 +216,48 @@ porque o host conectado não respondeu.
 [2025-04-22 14:35:03] Aviso: Não foi possível remover backup antigo: remove C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~: Acesso negado.
 [2025-04-22 14:35:03] Renomeando executável atual para backup: C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe -> C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~
 [2025-04-22 14:35:03] Erro ao renomear executável atual: rename C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~: Acesso negado.
+[2025-04-22 15:03:50] Diretório do executável: C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http
+[2025-04-22 15:03:50] Removendo backup antigo...
+[2025-04-22 15:03:50] Aviso: Não foi possível remover backup antigo: remove C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~: Acesso negado.
+[2025-04-22 15:03:50] Renomeando executável atual para backup: C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe -> C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~
+[2025-04-22 15:03:50] Erro ao renomear executável atual: rename C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~: Acesso negado.
+[2025-04-22 15:04:50] Diretório do executável: C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http
+[2025-04-22 15:04:50] Removendo backup antigo...
+[2025-04-22 15:04:50] Aviso: Não foi possível remover backup antigo: remove C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~: Acesso negado.
+[2025-04-22 15:04:50] Renomeando executável atual para backup: C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe -> C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~
+[2025-04-22 15:04:50] Erro ao renomear executável atual: rename C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~: Acesso negado.
+[2025-04-22 15:05:50] Diretório do executável: C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http
+[2025-04-22 15:05:50] Removendo backup antigo...
+[2025-04-22 15:05:50] Aviso: Não foi possível remover backup antigo: remove C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~: Acesso negado.
+[2025-04-22 15:05:50] Renomeando executável atual para backup: C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe -> C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~
+[2025-04-22 15:05:50] Erro ao renomear executável atual: rename C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~: Acesso negado.
+[2025-04-22 15:06:50] Diretório do executável: C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http
+[2025-04-22 15:06:50] Removendo backup antigo...
+[2025-04-22 15:06:50] Aviso: Não foi possível remover backup antigo: remove C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~: Acesso negado.
+[2025-04-22 15:06:50] Renomeando executável atual para backup: C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe -> C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~
+[2025-04-22 15:06:50] Erro ao renomear executável atual: rename C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~: Acesso negado.
+[2025-04-22 15:07:50] Diretório do executável: C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http
+[2025-04-22 15:07:50] Removendo backup antigo...
+[2025-04-22 15:07:50] Aviso: Não foi possível remover backup antigo: remove C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~: Acesso negado.
+[2025-04-22 15:07:50] Renomeando executável atual para backup: C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe -> C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~
+[2025-04-22 15:07:50] Erro ao renomear executável atual: rename C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~: Acesso negado.
+[2025-04-22 15:08:50] Diretório do executável: C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http
+[2025-04-22 15:08:50] Removendo backup antigo...
+[2025-04-22 15:08:50] Aviso: Não foi possível remover backup antigo: remove C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~: Acesso negado.
+[2025-04-22 15:08:50] Renomeando executável atual para backup: C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe -> C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~
+[2025-04-22 15:08:50] Erro ao renomear executável atual: rename C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~: Acesso negado.
+[2025-04-22 15:09:50] Diretório do executável: C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http
+[2025-04-22 15:09:50] Removendo backup antigo...
+[2025-04-22 15:09:50] Aviso: Não foi possível remover backup antigo: remove C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~: Acesso negado.
+[2025-04-22 15:09:50] Renomeando executável atual para backup: C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe -> C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~
+[2025-04-22 15:09:50] Erro ao renomear executável atual: rename C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~: Acesso negado.
+[2025-04-22 15:10:50] Diretório do executável: C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http
+[2025-04-22 15:10:50] Removendo backup antigo...
+[2025-04-22 15:10:50] Aviso: Não foi possível remover backup antigo: remove C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~: Acesso negado.
+[2025-04-22 15:10:50] Renomeando executável atual para backup: C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe -> C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~
+[2025-04-22 15:10:50] Erro ao renomear executável atual: rename C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~: Acesso negado.
+[2025-04-22 15:11:50] Diretório do executável: C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http
+[2025-04-22 15:11:50] Removendo backup antigo...
+[2025-04-22 15:11:50] Aviso: Não foi possível remover backup antigo: remove C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~: Acesso negado.
+[2025-04-22 15:11:50] Renomeando executável atual para backup: C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe -> C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~
+[2025-04-22 15:11:50] Erro ao renomear executável atual: rename C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe~: Acesso negado.
