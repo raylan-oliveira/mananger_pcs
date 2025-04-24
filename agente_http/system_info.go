@@ -5,6 +5,7 @@ import (
 	"os/exec"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -288,6 +289,157 @@ func getSystemInfoData() map[string]interface{} {
 	return info
 }
 
+// getPrinterInfo obtém informações sobre as impressoras instaladas no sistema
+func getPrinterInfo() []map[string]interface{} {
+	var printers []map[string]interface{}
+
+	// Usando PowerShell para obter informações detalhadas das impressoras
+	cmd := exec.Command("powershell", "-Command",
+		"Get-Printer | Select-Object Name, DriverName, PortName, PrinterStatus, Shared, ShareName, Published, Type, DeviceType, Location, Comment | ConvertTo-Json")
+	output, err := cmd.Output()
+	if err == nil && len(output) > 0 {
+		// Armazenar a saída bruta para processamento
+		jsonOutput := string(output)
+
+		// Processar a saída JSON para extrair informações estruturadas
+		// Como o JSON pode ser um objeto único ou um array, vamos tratar ambos os casos
+		if strings.HasPrefix(strings.TrimSpace(jsonOutput), "[") {
+			// É um array de impressoras
+			cmd = exec.Command("powershell", "-Command",
+				"Get-Printer | ForEach-Object { $name = $_.Name; $driver = $_.DriverName; $port = $_.PortName; $status = $_.PrinterStatus; $shared = $_.Shared; $shareName = $_.ShareName; $location = $_.Location; Write-Host \"$name|$driver|$port|$status|$shared|$shareName|$location\" }")
+		} else {
+			// É uma única impressora
+			cmd = exec.Command("powershell", "-Command",
+				"$printer = Get-Printer; $name = $printer.Name; $driver = $printer.DriverName; $port = $printer.PortName; $status = $printer.PrinterStatus; $shared = $printer.Shared; $shareName = $printer.ShareName; $location = $printer.Location; Write-Host \"$name|$driver|$port|$status|$shared|$shareName|$location\"")
+		}
+
+		printerOutput, err := cmd.Output()
+		if err == nil && len(printerOutput) > 0 {
+			lines := strings.Split(strings.TrimSpace(string(printerOutput)), "\n")
+			for _, line := range lines {
+				parts := strings.Split(strings.TrimSpace(line), "|")
+				if len(parts) >= 3 {
+					printer := make(map[string]interface{})
+					printer["nome"] = strings.TrimSpace(parts[0])
+					printer["driver"] = strings.TrimSpace(parts[1])
+					printer["porta"] = strings.TrimSpace(parts[2])
+
+					if len(parts) >= 4 {
+						printer["status"] = strings.TrimSpace(parts[3])
+					}
+
+					if len(parts) >= 5 {
+						sharedStr := strings.TrimSpace(parts[4])
+						printer["compartilhada"] = (sharedStr == "True")
+					}
+
+					if len(parts) >= 6 {
+						shareName := strings.TrimSpace(parts[5])
+						if shareName != "" {
+							printer["nome_compartilhamento"] = shareName
+						}
+					}
+
+					if len(parts) >= 7 {
+						location := strings.TrimSpace(parts[6])
+						if location != "" {
+							printer["localizacao"] = location
+						}
+					}
+
+					printers = append(printers, printer)
+				}
+			}
+		}
+	}
+
+	// Método alternativo: usar WMI para obter informações das impressoras
+	if len(printers) == 0 {
+		cmd := exec.Command("powershell", "-Command",
+			"Get-WmiObject -Class Win32_Printer | ForEach-Object { $name = $_.Name; $driver = $_.DriverName; $port = $_.PortName; $status = $_.Status; $shared = $_.Shared; $shareName = $_.ShareName; $location = $_.Location; Write-Host \"$name|$driver|$port|$status|$shared|$shareName|$location\" }")
+
+		output, err := cmd.Output()
+		if err == nil && len(output) > 0 {
+			lines := strings.Split(strings.TrimSpace(string(output)), "\n")
+			for _, line := range lines {
+				parts := strings.Split(strings.TrimSpace(line), "|")
+				if len(parts) >= 3 {
+					printer := make(map[string]interface{})
+					printer["nome"] = strings.TrimSpace(parts[0])
+					printer["driver"] = strings.TrimSpace(parts[1])
+					printer["porta"] = strings.TrimSpace(parts[2])
+
+					if len(parts) >= 4 {
+						printer["status"] = strings.TrimSpace(parts[3])
+					}
+
+					if len(parts) >= 5 {
+						sharedStr := strings.TrimSpace(parts[4])
+						printer["compartilhada"] = (sharedStr == "True")
+					}
+
+					if len(parts) >= 6 {
+						shareName := strings.TrimSpace(parts[5])
+						if shareName != "" {
+							printer["nome_compartilhamento"] = shareName
+						}
+					}
+
+					if len(parts) >= 7 {
+						location := strings.TrimSpace(parts[6])
+						if location != "" {
+							printer["localizacao"] = location
+						}
+					}
+
+					printers = append(printers, printer)
+				}
+			}
+		}
+	}
+
+	// Obter informações adicionais sobre os trabalhos de impressão
+	for i, printer := range printers {
+		printerName, ok := printer["nome"].(string)
+		if ok {
+			cmd := exec.Command("powershell", "-Command",
+				fmt.Sprintf("Get-PrintJob -PrinterName \"%s\" | Measure-Object | Select-Object -ExpandProperty Count", printerName))
+			output, err := cmd.Output()
+			if err == nil && len(output) > 0 {
+				jobCountStr := strings.TrimSpace(string(output))
+				jobCount, err := strconv.Atoi(jobCountStr)
+				if err == nil {
+					printers[i]["trabalhos_pendentes"] = jobCount
+				}
+			}
+		}
+	}
+
+	// Obter informações sobre os drivers de impressora
+	for i, printer := range printers {
+		driverName, ok := printer["driver"].(string)
+		if ok {
+			cmd := exec.Command("powershell", "-Command",
+				fmt.Sprintf("Get-PrinterDriver -Name \"%s\" | Select-Object -Property MajorVersion, MinorVersion | ForEach-Object { Write-Host \"$($_.MajorVersion)|$($_.MinorVersion)\" }", driverName))
+			output, err := cmd.Output()
+			if err == nil && len(output) > 0 {
+				versionInfo := strings.TrimSpace(string(output))
+				parts := strings.Split(versionInfo, "|")
+				if len(parts) >= 2 {
+					majorVersion, majorErr := strconv.Atoi(strings.TrimSpace(parts[0]))
+					minorVersion, minorErr := strconv.Atoi(strings.TrimSpace(parts[1]))
+
+					if majorErr == nil && minorErr == nil {
+						printers[i]["versao_driver"] = fmt.Sprintf("%d.%d", majorVersion, minorVersion)
+					}
+				}
+			}
+		}
+	}
+
+	return printers
+}
+
 // Função para coletar informações do sistema
 func collectSystemInfo() (SystemInfo, error) {
 	// Obter informações detalhadas do sistema
@@ -308,14 +460,15 @@ func collectSystemInfo() (SystemInfo, error) {
 
 	// Informações básicas do sistema
 	info := SystemInfo{
-		Sistema:   sistemaInfo,
-		CPU:       getCPUInfo(),
-		Memoria:   getDetailedMemoryInfo(),
-		Discos:    getDiskInfo(),
-		Rede:      getNetworkInfo(),
-		GPU:       getGPUInfo(),
-		Processos: getProcessInfo(),
-		Hardware:  getHardwareInfo(),
+		Sistema:     sistemaInfo,
+		CPU:         getCPUInfo(),
+		Memoria:     getDetailedMemoryInfo(),
+		Discos:      getDiskInfo(),
+		Rede:        getNetworkInfo(),
+		GPU:         getGPUInfo(),
+		Processos:   getProcessInfo(),
+		Hardware:    getHardwareInfo(),
+		Impressoras: getPrinterInfo(), // Adicionando informações das impressoras
 		Agente: AgenteInfo{
 			VersaoAgente:             versaoAgente,
 			ServidorAtualizacao:      "",
@@ -342,6 +495,9 @@ func collectSystemInfo() (SystemInfo, error) {
 	}
 	if info.Processos == nil {
 		info.Processos = make(map[string]interface{})
+	}
+	if info.Impressoras == nil {
+		info.Impressoras = []map[string]interface{}{}
 	}
 
 	return info, nil
@@ -550,6 +706,9 @@ func updateDynamicInfo(info *SystemInfo) {
 
 	// Atualizar informações de processos
 	info.Processos = getProcessInfo()
+
+	// Atualizar informações de impressoras
+	info.Impressoras = getPrinterInfo()
 
 	// Atualizar informações dinâmicas do sistema
 	sistemaInfo := getSystemInfoData()

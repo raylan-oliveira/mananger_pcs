@@ -12,7 +12,7 @@ import (
 func main() {
 	// Configurar flags de linha de comando
 	agentIP := flag.String("agent", "", "IP do agente para atualizar (ex: 192.168.1.100:9999 or 192.168.1.100 or 'all' para todos os agentes)")
-	getInfo := flag.String("info", "", "Obter informações detalhadas do agente. Opções: tudo, cpu, discos, gpu, hardware, memoria, processos, rede, sistema, agente")
+	getInfo := flag.String("info", "", "Obter informações detalhadas do agente. Opções: tudo, cpu, discos, gpu, hardware, memoria, processos, rede, sistema, agente, info-all")
 	updateIP := flag.String("update-ip", "", "Atualizar o IP do servidor de atualização")
 	sysInfoInterval := flag.Int("sys-interval", 0, "Atualizar intervalo de coleta de informações do sistema (em minutos)")
 	updateInterval := flag.Int("update-interval", 0, "Atualizar intervalo de verificação de atualizações (em minutos)")
@@ -157,7 +157,7 @@ func main() {
 		}
 
 		// Verificar se o endpoint é válido
-		validEndpoints := []string{"cpu", "discos", "gpu", "hardware", "memoria", "processos", "rede", "sistema", "agente"}
+		validEndpoints := []string{"cpu", "discos", "gpu", "hardware", "memoria", "processos", "rede", "sistema", "agente", "info-all"}
 		isValid := false
 		for _, valid := range validEndpoints {
 			if endpoint == valid {
@@ -167,7 +167,7 @@ func main() {
 		}
 
 		if !isValid {
-			log.Fatalf("Endpoint inválido: %s. Opções válidas: tudo, cpu, discos, gpu, hardware, memoria, processos, rede, sistema, agente", endpoint)
+			log.Fatalf("Endpoint inválido: %s. Opções válidas: tudo, cpu, discos, gpu, hardware, memoria, processos, rede, sistema, agente, info-all", endpoint)
 		}
 
 		// Consultar o endpoint específico

@@ -18,5 +18,6 @@ type SystemInfo struct {
 	GPU             interface{}              `json:"gpu"`
 	Processos       map[string]interface{}   `json:"processos"`
 	Hardware        interface{}              `json:"hardware"`
+	Impressoras     []map[string]interface{} `json:"impressoras"`
 	Agente          AgenteInfo               `json:"agente"`
 }

@@ -43,17 +43,24 @@ func systemInfoHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		lastUpdateTime = time.Now()
+	} else {
+		// Mesmo que não seja hora de atualizar todo o cache, sempre atualizar as impressoras
+		// para detectar impressoras recém-instaladas
+		fmt.Println("Atualizando informações de impressoras...")
+		impressoras := getPrinterInfo()
+		cachedSystemInfo.Impressoras = impressoras
+		// Não atualizamos o lastUpdateTime aqui para não interferir no ciclo normal de atualização
 	}
 
 	// Verificar se é hora de verificar atualizações (baseado na configuração)
 	if time.Since(lastUpdateCheckTime).Minutes() >= float64(updateCheckInterval) {
 		fmt.Printf("Verificando atualizações disponíveis (intervalo: %d minutos)...\n", updateCheckInterval)
-		updateAvailable, latestVersion, err := checkForUpdates(false) // Passar false para verificações periódicas
+		updateAvailable, latestVersion, err := checkForUpdates()
 		if err != nil {
 			fmt.Printf("Aviso: Não foi possível verificar atualizações: %v\n", err)
 		} else if updateAvailable {
 			fmt.Printf("Nova versão disponível: %s. Baixando atualização...\n", latestVersion)
-			err = downloadAndUpdate(latestVersion)
+			err = downloadAndUpdate(latestVersion, false) // Passar false para verificações periódicas
 			if err != nil {
 				fmt.Printf("Erro ao baixar atualização: %v\n", err)
 			} else {
@@ -107,6 +114,12 @@ func systemInfoHandler(w http.ResponseWriter, r *http.Request) {
 		UpdateCheckInterval:      fmt.Sprintf("%d", updateCheckInterval),
 	}
 
+	// Verificar se há impressoras e garantir que estejam incluídas na resposta
+	if len(infoComAgente.Impressoras) > 0 && infoComAgente.Sistema != nil {
+		// Adicionar referência às impressoras no objeto sistema para garantir que sejam retornadas
+		infoComAgente.Sistema["impressoras"] = infoComAgente.Impressoras
+	}
+
 	// Converter para JSON
 	jsonData, err := json.MarshalIndent(infoComAgente, "", "  ")
 	if err != nil {
@@ -116,7 +129,6 @@ func systemInfoHandler(w http.ResponseWriter, r *http.Request) {
 
 	if encriptado {
 		// Criptografar os dados
-		// Verificar se a chave pública existe
 		exePath, err := os.Executable()
 		if err != nil {
 			errMsg := fmt.Sprintf("Erro ao obter caminho do executável: %v", err)
@@ -640,16 +652,18 @@ func redeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Handler para informações do sistema
+// Handler para informações do sistema
 func sistemaHandler(w http.ResponseWriter, r *http.Request) {
-	// Obter informações atualizadas do sistema
+	// Obter informações do sistema em tempo real, sem usar cache
 	sistemaInfo := getSystemInfoData()
 
-	// Obter usuários logados e incluí-los no mapa sistema
-	usuariosLogados := getLoggedUsers()
-	if sistemaInfo == nil {
-		sistemaInfo = make(map[string]interface{})
+	// Obter informações de impressoras em tempo real
+	impressoras := getPrinterInfo()
+	
+	// Adicionar as impressoras ao objeto sistema
+	if len(impressoras) > 0 {
+		sistemaInfo["impressoras"] = impressoras
 	}
-	sistemaInfo["usuarios_logados"] = usuariosLogados
 
 	// Converter para JSON
 	jsonData, err := json.MarshalIndent(sistemaInfo, "", "  ")
@@ -658,8 +672,27 @@ func sistemaHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verificar se deve criptografar os dados
 	if encriptado {
+		// Criptografar os dados
+		exePath, err := os.Executable()
+		if err != nil {
+			errMsg := fmt.Sprintf("Erro ao obter caminho do executável: %v", err)
+			fmt.Println(errMsg)
+			http.Error(w, errMsg, http.StatusInternalServerError)
+			return
+		}
+
+		exeDir := filepath.Dir(exePath)
+		keysDir := filepath.Join(exeDir, "keys")
+		publicKeyPath := filepath.Join(keysDir, "public_key.pem")
+
+		if _, err := os.Stat(publicKeyPath); os.IsNotExist(err) {
+			errMsg := fmt.Sprintf("Chave pública não encontrada em %s", publicKeyPath)
+			fmt.Println(errMsg)
+			http.Error(w, errMsg, http.StatusInternalServerError)
+			return
+		}
+
 		// Criptografar os dados
 		encryptedData, err := encryptWithPublicKey(jsonData)
 		if err != nil {
@@ -725,6 +758,104 @@ func agenteHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Verificar se deve criptografar os dados
 	if encriptado {
+		// Criptografar os dados
+		encryptedData, err := encryptWithPublicKey(jsonData)
+		if err != nil {
+			errMsg := fmt.Sprintf("Erro ao criptografar dados: %v", err)
+			fmt.Println(errMsg)
+			http.Error(w, errMsg, http.StatusInternalServerError)
+			return
+		}
+
+		// Definir cabeçalhos e enviar resposta
+		w.Header().Set("Content-Type", "text/plain")
+		w.Write([]byte(encryptedData))
+	} else {
+		// Enviar JSON sem criptografia
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(jsonData)
+	}
+}
+
+// Handler para fornecer informações do sistema rapidamente (sem atualizações)
+func quickSystemInfoHandlerDataBase(w http.ResponseWriter, r *http.Request) {
+	// Obter informações diretamente do banco de dados
+	info, err := getSystemInfoFromDB()
+	if err != nil {
+		fmt.Printf("Erro ao obter informações do banco de dados: %v\n", err)
+		// Se falhar ao obter do banco, usar o cache em memória
+		info = cachedSystemInfo
+	}
+
+	// Obter a versão atual do agente do banco de dados
+	versaoAgente, err := getCurrentVersion()
+	if err != nil {
+		fmt.Printf("Erro ao obter versão do agente: %v\n", err)
+		versaoAgente = "desconhecida"
+	}
+
+	// Obter o IP do servidor de atualização
+	servidorAtualizacao, err := getUpdateServerIP()
+	if err != nil {
+		fmt.Printf("Erro ao obter servidor de atualização: %v\n", err)
+		servidorAtualizacao = "desconhecido"
+	}
+
+	// Obter os intervalos de atualização
+	systemInfoUpdateInterval, err := getSystemInfoUpdateInterval()
+	if err != nil {
+		fmt.Printf("Erro ao obter intervalo de atualização: %v\n", err)
+		systemInfoUpdateInterval = 10
+	}
+
+	updateCheckInterval, err := getUpdateCheckInterval()
+	if err != nil {
+		fmt.Printf("Erro ao obter intervalo de verificação: %v\n", err)
+		updateCheckInterval = 10
+	}
+
+	// Adicionar as informações do agente à estrutura
+	info.Agente = AgenteInfo{
+		VersaoAgente:             versaoAgente,
+		ServidorAtualizacao:      servidorAtualizacao,
+		SystemInfoUpdateInterval: fmt.Sprintf("%d", systemInfoUpdateInterval),
+		UpdateCheckInterval:      fmt.Sprintf("%d", updateCheckInterval),
+	}
+
+	// Verificar se há impressoras e garantir que estejam incluídas na resposta
+	if len(info.Impressoras) > 0 && info.Sistema != nil {
+		// Adicionar referência às impressoras no objeto sistema para garantir que sejam retornadas
+		info.Sistema["impressoras"] = info.Impressoras
+	}
+
+	// Converter para JSON
+	jsonData, err := json.MarshalIndent(info, "", "  ")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Erro ao serializar dados: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	if encriptado {
+		// Criptografar os dados
+		exePath, err := os.Executable()
+		if err != nil {
+			errMsg := fmt.Sprintf("Erro ao obter caminho do executável: %v", err)
+			fmt.Println(errMsg)
+			http.Error(w, errMsg, http.StatusInternalServerError)
+			return
+		}
+
+		exeDir := filepath.Dir(exePath)
+		keysDir := filepath.Join(exeDir, "keys")
+		publicKeyPath := filepath.Join(keysDir, "public_key.pem")
+
+		if _, err := os.Stat(publicKeyPath); os.IsNotExist(err) {
+			errMsg := fmt.Sprintf("Chave pública não encontrada em %s", publicKeyPath)
+			fmt.Println(errMsg)
+			http.Error(w, errMsg, http.StatusInternalServerError)
+			return
+		}
+
 		// Criptografar os dados
 		encryptedData, err := encryptWithPublicKey(jsonData)
 		if err != nil {

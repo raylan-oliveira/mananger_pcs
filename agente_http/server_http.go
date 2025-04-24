@@ -11,12 +11,13 @@ import (
 var (
 	httpServer     *http.Server
 	serverShutdown chan bool
+	mux            *http.ServeMux // Adicionar esta linha para definir o multiplexer
 )
 
 // Inicializa o servidor HTTP
 func initHTTPServer(port int) {
-	// Configurando o servidor HTTP
-	mux := http.NewServeMux()
+	// Inicializar o multiplexer
+	mux = http.NewServeMux() // Adicionar esta linha para inicializar o multiplexer
 
 	// Middleware para adicionar cabeçalhos CORS
 	corsMiddleware := func(next http.HandlerFunc) http.HandlerFunc {
@@ -35,7 +36,8 @@ func initHTTPServer(port int) {
 	}
 
 	// Registrar handlers com middleware CORS
-	mux.HandleFunc("/", corsMiddleware(systemInfoHandler))
+	mux.HandleFunc("/", corsMiddleware(quickSystemInfoHandlerDataBase))
+	mux.HandleFunc("/info-all", corsMiddleware(systemInfoHandler)) // Novo endpoint para consultas rápidas
 	mux.HandleFunc("/update-server", corsMiddleware(updateServerIPHandler))
 	mux.HandleFunc("/update-system-info-interval", corsMiddleware(updateSystemInfoIntervalHandler))
 	mux.HandleFunc("/update-check-interval", corsMiddleware(updateCheckIntervalHandler))

@@ -95,12 +95,12 @@ func main() {
 
 	// Verificar atualizações
 	fmt.Println("Verificando atualizações disponíveis...")
-	updateAvailable, latestVersion, err := checkForUpdates(true) // Passar true para indicar que é verificação inicial
+	updateAvailable, latestVersion, err := checkForUpdates()
 	if err != nil {
 		fmt.Printf("Aviso: Não foi possível verificar atualizações: %v\n", err)
 	} else if updateAvailable {
 		fmt.Printf("Nova versão disponível: %s. Baixando atualização...\n", latestVersion)
-		err = downloadAndUpdate(latestVersion)
+		err = downloadAndUpdate(latestVersion, true) // Passar true para indicar que é verificação inicial
 		if err != nil {
 			fmt.Printf("Erro ao baixar atualização: %v\n", err)
 		} else {
@@ -333,12 +333,12 @@ func manageUpdateChecks() {
         case <-ticker.C:
             // É hora de verificar atualizações
             fmt.Printf("Verificando atualizações disponíveis (intervalo: %d minutos)...\n", updateCheckIntervalMinutes)
-            updateAvailable, latestVersion, err := checkForUpdates(false) // Passar false para verificações periódicas
+            updateAvailable, latestVersion, err := checkForUpdates()
             if err != nil {
                 fmt.Printf("Aviso: Não foi possível verificar atualizações: %v\n", err)
             } else if updateAvailable {
                 fmt.Printf("Nova versão disponível: %s. Baixando atualização...\n", latestVersion)
-                err = downloadAndUpdate(latestVersion)
+                err = downloadAndUpdate(latestVersion, false) // Passar false para verificações periódicas
                 if err != nil {
                     fmt.Printf("Erro ao baixar atualização: %v\n", err)
                 } else {

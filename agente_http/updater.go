@@ -57,14 +57,7 @@ func logUpdateError(message string) {
 }
 
 // checkForUpdates verifica se há atualizações disponíveis
-func checkForUpdates(isInitialCheck bool) (bool, string, error) {
-	// Adicionar delay apenas se não for verificação inicial
-	if !isInitialCheck {
-		delaySeconds := time.Duration(MinUpdateDelay + rand.Intn(MaxUpdateDelayAdd)) // Gera um número entre 60 e 180 segundos
-		logUpdateError(fmt.Sprintf("Aguardando %d segundos antes de verificar atualizações...", delaySeconds))
-		time.Sleep(delaySeconds * time.Second)
-	}
-
+func checkForUpdates() (bool, string, error) {
 	// Verificar se estamos em um processo de atualização recente
 	if isRecentlyUpdated() {
 		logUpdateError("Atualização recente detectada, pulando verificação de atualizações")
@@ -127,7 +120,7 @@ func checkForUpdates(isInitialCheck bool) (bool, string, error) {
 	if !isValidVersionFormat(latestVersion) {
 		return false, "", fmt.Errorf("formato de versão inválido: %s", latestVersion)
 	}
-
+	
 	// Comparar versões
 	if compareVersions(latestVersion, currentVersion) > 0 {
 		return true, latestVersion, nil
@@ -224,7 +217,14 @@ func isValidVersionFormat(version string) bool {
 }
 
 // downloadAndUpdate baixa e instala a atualização
-func downloadAndUpdate(newVersion string) error {
+func downloadAndUpdate(newVersion string, isInitialCheck bool) error {
+	// Adicionar delay apenas se não for verificação inicial
+	if !isInitialCheck {
+		delaySeconds := time.Duration(MinUpdateDelay + rand.Intn(MaxUpdateDelayAdd)) // Gera um número entre 60 e 180 segundos
+		logUpdateError(fmt.Sprintf("Aguardando %d segundos antes de baixar a atualização...", delaySeconds))
+		time.Sleep(delaySeconds * time.Second)
+	}
+
 	// Obter o caminho do executável atual
 	exePath, err := os.Executable()
 	if err != nil {
