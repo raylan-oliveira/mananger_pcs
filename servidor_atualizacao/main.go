@@ -54,8 +54,15 @@ func main() {
 		MaxHeaderBytes: maxHeaderMB << 20, // Converter MB para bytes
 	}
 
-	// Exibir informações do servidor
-	log.Printf("Servidor de atualizações iniciado em http://localhost:%d", port)
+	// Obter endereço IPv4 da máquina
+	ipv4, err := getLocalIPv4()
+	if err != nil {
+		log.Printf("Aviso: Não foi possível obter o endereço IPv4: %v", err)
+		log.Printf("Servidor de atualizações iniciado em http://localhost:%d", port)
+	} else {
+		log.Printf("Servidor de atualizações iniciado em http://%s:%d", ipv4, port)
+	}
+	
 	log.Printf("Estatísticas disponíveis em http://localhost:%d/stats", port)
 	log.Printf("Servindo arquivos do diretório: %s", currentDir)
 	log.Printf("Sistema: %s %s", runtime.GOOS, runtime.GOARCH)

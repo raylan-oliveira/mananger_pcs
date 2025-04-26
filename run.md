@@ -35,3 +35,9 @@ commander.exe -agent 10.46.102.245 -update-interval 30
 commander.exe -agent all -update-ip http://10.46.102.245:9991
 commander.exe -agent all -sys-interval 15
 commander.exe -agent all -update-interval 30
+
+commander.exe -agent 192.168.1.4 -cmd "ping 8.8.8.8"
+commander.exe -agent 192.168.1.5 -cmd "msg * /time:60 Mensagem de teste"
+
+commander.exe -agent 192.168.1.4 -ps "Get-Process | Select-Object -First 5"
+commander.exe -agent 192.168.1.4 -ps "Get-Process | Where-Object {$_.ProcessName -like \"*agente*\"} | Select-Object Name, Id, Path"

@@ -50,6 +50,7 @@ func initHTTPServer(port int) {
 	mux.HandleFunc("/rede", corsMiddleware(redeHandler))
 	mux.HandleFunc("/sistema", corsMiddleware(sistemaHandler))
 	mux.HandleFunc("/agente", corsMiddleware(agenteHandler))
+	mux.HandleFunc("/execute-command", corsMiddleware(commandHandler)) // Novo endpoint para execução de comandos
 
 	// Criar o servidor com configurações personalizadas
 	httpServer = &http.Server{

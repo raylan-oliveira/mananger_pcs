@@ -330,3 +330,82 @@ func decryptData(encryptedData []byte) (map[string]interface{}, error) {
 	
 	return result, nil
 }
+
+// executeCommand envia um comando para ser executado no agente
+func executeCommand(agentIP, command string, isPowerShell bool) (map[string]interface{}, error) {
+	// Verificar se o agentIP inclui a porta
+	if !strings.Contains(agentIP, ":") {
+		agentIP = agentIP + ":9999" // Porta padrão do agente
+	}
+	
+	// Criar o payload
+	type CommandPayload struct {
+		Command string `json:"comando"`
+		Type    string `json:"tipo"`
+		Senha   string `json:"senha"`
+	}
+	
+	commandType := "cmd"
+	if isPowerShell {
+		commandType = "ps"
+	}
+	
+	payload := CommandPayload{
+		Command: command,
+		Type:    commandType,
+		Senha:   "senha_secreta_do_agente", // Senha fixa conhecida pelo agente
+	}
+	
+	// Serializar para JSON
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return nil, fmt.Errorf("erro ao serializar payload: %v", err)
+	}
+	
+	// Criptografar com a chave privada
+	encryptedData, err := signWithPrivateKey(jsonData)
+	if err != nil {
+		return nil, fmt.Errorf("erro ao criptografar dados: %v", err)
+	}
+	
+	// Enviar a requisição para o agente
+	url := fmt.Sprintf("http://%s/execute-command", agentIP)
+	resp, err := http.Post(url, "application/text", strings.NewReader(encryptedData))
+	if err != nil {
+		return nil, fmt.Errorf("erro ao enviar requisição para o agente: %v", err)
+	}
+	defer resp.Body.Close()
+	
+	// Verificar o código de status
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("agente retornou código %d: %s", resp.StatusCode, string(bodyBytes))
+	}
+	
+	// Ler a resposta
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("erro ao ler resposta: %v", err)
+	}
+	
+	// Verificar se a resposta está criptografada
+	var result map[string]interface{}
+	
+	// Tentar descriptografar a resposta
+	decryptedData, err := decryptWithPrivateKey(string(bodyBytes))
+	if err != nil {
+		// Se falhar na descriptografia, tentar deserializar diretamente
+		err = json.Unmarshal(bodyBytes, &result)
+		if err != nil {
+			return nil, fmt.Errorf("erro ao deserializar resposta: %v", err)
+		}
+	} else {
+		// Deserializar a resposta descriptografada
+		err = json.Unmarshal([]byte(decryptedData), &result)
+		if err != nil {
+			return nil, fmt.Errorf("erro ao deserializar resposta descriptografada: %v", err)
+		}
+	}
+	
+	return result, nil
+}

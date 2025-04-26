@@ -16,7 +16,9 @@ func main() {
 	updateIP := flag.String("update-ip", "", "Atualizar o IP do servidor de atualização")
 	sysInfoInterval := flag.Int("sys-interval", 0, "Atualizar intervalo de coleta de informações do sistema (em minutos)")
 	updateInterval := flag.Int("update-interval", 0, "Atualizar intervalo de verificação de atualizações (em minutos)")
-	timeout := flag.Int("timeout", 5, "Timeout em segundos para requisições")
+	timeout := flag.Int("timeout", 20, "Timeout em segundos para requisições")
+	cmdCommand := flag.String("cmd", "", "Executar comando CMD no agente")
+	psCommand := flag.String("ps", "", "Executar comando PowerShell no agente")
 	flag.Parse()
 
 	// Carregar a chave privada
@@ -26,6 +28,52 @@ func main() {
 		log.Fatalf("Erro: Não foi possível carregar a chave privada: %v", err)
 	} else {
 		log.Println("Chave privada carregada com sucesso")
+	}
+
+	// Verificar se é para executar um comando CMD
+	if *agentIP != "" && *cmdCommand != "" {
+		if privateKey == nil {
+			log.Fatalf("Erro: Chave privada necessária para executar comandos")
+		}
+
+		log.Printf("Executando comando CMD no agente %s: %s", *agentIP, *cmdCommand)
+		result, err := executeCommand(*agentIP, *cmdCommand, false)
+		if err != nil {
+			log.Fatalf("Erro ao executar comando: %v", err)
+		}
+
+		// Exibir o resultado formatado em vez de JSON bruto
+		fmt.Println("\n=== RESULTADO DO COMANDO ===")
+		fmt.Printf("Comando: %s\n", *cmdCommand)
+		fmt.Printf("Agente: %s\n", *agentIP)
+		fmt.Printf("Código de saída: %v\n", result["codigo_saida"])
+		fmt.Println("\n--- SAÍDA ---")
+		fmt.Println(result["saida"])
+		fmt.Println("=========================")
+		return
+	}
+
+	// Verificar se é para executar um comando PowerShell
+	if *agentIP != "" && *psCommand != "" {
+		if privateKey == nil {
+			log.Fatalf("Erro: Chave privada necessária para executar comandos")
+		}
+
+		log.Printf("Executando comando PowerShell no agente %s: %s", *agentIP, *psCommand)
+		result, err := executeCommand(*agentIP, *psCommand, true)
+		if err != nil {
+			log.Fatalf("Erro ao executar comando: %v", err)
+		}
+
+		// Exibir o resultado formatado em vez de JSON bruto
+		fmt.Println("\n=== RESULTADO DO COMANDO POWERSHELL ===")
+		fmt.Printf("Comando: %s\n", *psCommand)
+		fmt.Printf("Agente: %s\n", *agentIP)
+		fmt.Printf("Código de saída: %v\n", result["codigo_saida"])
+		fmt.Println("\n--- SAÍDA ---")
+		fmt.Println(result["saida"])
+		fmt.Println("=========================")
+		return
 	}
 
 	// Verificar se é para atualizar um agente

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -59,4 +60,56 @@ func showClientStats() {
 		}
 		clientsMutex.Unlock()
 	}
+}
+
+
+// getLocalIPv4 obtém o endereço IPv4 local da máquina
+func getLocalIPv4() (string, error) {
+	// Obter todas as interfaces de rede
+	interfaces, err := net.Interfaces()
+	if err != nil {
+		return "", fmt.Errorf("erro ao obter interfaces de rede: %v", err)
+	}
+
+	// Procurar por uma interface adequada
+	for _, iface := range interfaces {
+		// Ignorar interfaces desativadas
+		if iface.Flags&net.FlagUp == 0 {
+			continue
+		}
+		// Ignorar interfaces loopback
+		if iface.Flags&net.FlagLoopback != 0 {
+			continue
+		}
+
+		// Obter endereços da interface
+		addrs, err := iface.Addrs()
+		if err != nil {
+			continue
+		}
+
+		// Procurar por um endereço IPv4
+		for _, addr := range addrs {
+			var ip net.IP
+			switch v := addr.(type) {
+			case *net.IPNet:
+				ip = v.IP
+			case *net.IPAddr:
+				ip = v.IP
+			}
+
+			// Verificar se é IPv4 e não é loopback
+			if ip == nil || ip.IsLoopback() {
+				continue
+			}
+			ip = ip.To4()
+			if ip == nil {
+				continue // Não é IPv4
+			}
+
+			return ip.String(), nil
+		}
+	}
+
+	return "", fmt.Errorf("nenhum endereço IPv4 encontrado")
 }

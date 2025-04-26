@@ -94,3 +94,63 @@ func signWithPrivateKey(data []byte) (string, error) {
 	encoded := base64.StdEncoding.EncodeToString(signedChunks)
 	return encoded, nil
 }
+
+// decryptWithPrivateKey descriptografa dados com a chave privada
+func decryptWithPrivateKey(encryptedData string) (string, error) {
+	// Decodificar o base64
+	data, err := base64.StdEncoding.DecodeString(encryptedData)
+	if err != nil {
+		return "", fmt.Errorf("erro ao decodificar base64: %v", err)
+	}
+	
+	// Processar os chunks
+	var decryptedData []byte
+	i := 0
+	
+	for i < len(data) {
+		// Ler o tamanho do chunk
+		if i+4 >= len(data) {
+			return "", fmt.Errorf("formato inválido: dados truncados")
+		}
+		
+		chunkLen := binary.BigEndian.Uint32(data[i : i+4])
+		i += 4
+		
+		// Verificar o separador
+		if i >= len(data) || data[i] != ':' {
+			return "", fmt.Errorf("formato inválido: separador não encontrado")
+		}
+		i++
+		
+		// Ler o chunk criptografado
+		if i+int(chunkLen) > len(data) {
+			return "", fmt.Errorf("formato inválido: chunk truncado")
+		}
+		
+		encryptedChunk := data[i : i+int(chunkLen)]
+		i += int(chunkLen)
+		
+		// Verificar o separador
+		if i >= len(data) || data[i] != ':' {
+			return "", fmt.Errorf("formato inválido: separador final não encontrado")
+		}
+		i++
+		
+		// Descriptografar o chunk
+		decryptedChunk, err := rsa.DecryptOAEP(
+			sha256.New(),
+			rand.Reader,
+			privateKey,
+			encryptedChunk,
+			nil,
+		)
+		if err != nil {
+			return "", fmt.Errorf("erro ao descriptografar chunk: %v", err)
+		}
+		
+		// Adicionar o chunk descriptografado ao resultado
+		decryptedData = append(decryptedData, decryptedChunk...)
+	}
+	
+	return string(decryptedData), nil
+}

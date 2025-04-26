@@ -60,15 +60,20 @@ func systemInfoHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Printf("Aviso: Não foi possível verificar atualizações: %v\n", err)
 		} else if updateAvailable {
 			fmt.Printf("Nova versão disponível: %s. Baixando atualização...\n", latestVersion)
-			err = downloadAndUpdate(latestVersion, false) // Passar false para verificações periódicas
-			if err != nil {
-				fmt.Printf("Erro ao baixar atualização: %v\n", err)
-			} else {
-				fmt.Println("Atualização baixada com sucesso. O aplicativo será reiniciado.")
-				// Reiniciar o aplicativo
-				restartApplication()
-				return
-			}
+			// Executar o download e atualização em uma goroutine separada
+			go func(version string) {
+				err := downloadAndUpdate(version, false) // Passar false para verificações periódicas
+				if err != nil {
+					fmt.Printf("Erro ao baixar atualização: %v\n", err)
+				} else {
+					fmt.Println("Atualização baixada com sucesso. O aplicativo será reiniciado.")
+					// Reiniciar o aplicativo
+					restartApplication()
+				}
+			}(latestVersion)
+			
+			// Continuar processando a requisição normalmente
+			fmt.Println("Iniciando download da atualização em segundo plano...")
 		} else {
 			fmt.Println("O aplicativo está atualizado.")
 		}
