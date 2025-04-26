@@ -38,6 +38,13 @@ commander.exe -agent all -update-interval 30
 
 commander.exe -agent 192.168.1.4 -cmd "ping 8.8.8.8"
 commander.exe -agent 192.168.1.5 -cmd "msg * /time:60 Mensagem de teste"
+commander.exe -agent 192.168.1.4 -cmd "dir /x c:\" # Mostrar os arquivos e diretórios da raiz do C:" com nomes curtos
+commander.exe -agent 192.168.1.4 -cmd "dir C:\LIVROS~1" # Livro é uma pasta que tem espaço no nome.. 'Livros Estudar'
+    - dir /X mostrar os nomes curtos dos arquivos e diretórios.
+    - dir /S mostrar os nomes completos dos arquivos e diretórios.
+    - dir /B mostrar apenas os nomes dos arquivos e diretórios.
+    - dir /A mostrar apenas os arquivos e diretórios ocultos.
+    - type funciona com nome curtos: NOVO6~1.TXT ('novo 6.txt')
 
 commander.exe -agent 192.168.1.4 -ps "Get-Process | Select-Object -First 5"
 commander.exe -agent 192.168.1.4 -ps "Get-Process | Where-Object {$_.ProcessName -like \"*agente*\"} | Select-Object Name, Id, Path"
