@@ -10,6 +10,15 @@ import (
 	"time"
 )
 
+// Configurações do servidor
+var (
+	port         int
+	readTimeout  time.Duration
+	writeTimeout time.Duration
+	idleTimeout  time.Duration
+	maxHeaderMB  int
+)
+
 func main() {
 	// Configurar flags de linha de comando
 	flag.IntVar(&port, "port", 9991, "Porta do servidor HTTP")
@@ -18,19 +27,6 @@ func main() {
 	flag.DurationVar(&idleTimeout, "idle-timeout", 120*time.Second, "Timeout para conexões ociosas")
 	flag.IntVar(&maxHeaderMB, "max-header", 1, "Tamanho máximo do cabeçalho em MB")
 	flag.Parse()
-
-	// Carregar a chave privada
-	var err error
-	privateKey, err = loadPrivateKey("keys/private_key.pem")
-	if err != nil {
-		log.Printf("Aviso: Não foi possível carregar a chave privada: %v", err)
-		log.Println("Algumas funcionalidades de segurança estarão indisponíveis")
-	} else {
-		log.Println("Chave privada carregada com sucesso")
-	}
-
-	// Inicializar o mapa de clientes ativos
-	activeClients = make(map[string]int)
 
 	// Obter diretório atual
 	currentDir, err := os.Getwd()
@@ -43,7 +39,6 @@ func main() {
 
 	// Registrar handlers
 	http.HandleFunc("/", fileServerHandler(fileServer))
-	http.HandleFunc("/stats", statsHandler)
 
 	// Configurar o servidor HTTP com timeouts e limites
 	server := &http.Server{
@@ -62,17 +57,41 @@ func main() {
 	} else {
 		log.Printf("Servidor de atualizações iniciado em http://%s:%d", ipv4, port)
 	}
-	
-	log.Printf("Estatísticas disponíveis em http://localhost:%d/stats", port)
+
 	log.Printf("Servindo arquivos do diretório: %s", currentDir)
 	log.Printf("Sistema: %s %s", runtime.GOOS, runtime.GOARCH)
 
 	// Verificar e exibir arquivos importantes
 	checkImportantFiles(currentDir)
 
-	// Iniciar rotina para exibir estatísticas periodicamente
-	go showClientStats()
+	// Iniciar rotina para limpar recursos periodicamente
+	go cleanupResources()
 
 	// Iniciar o servidor
 	log.Fatal(server.ListenAndServe())
+}
+
+// cleanupResources limpa recursos periodicamente para evitar vazamentos de memória
+func cleanupResources() {
+	ticker := time.NewTicker(6 * time.Hour) // Aumentado de 1 para 6 horas
+	defer ticker.Stop()
+
+	for range ticker.C {
+		// Registrar uso de memória atual
+		var m runtime.MemStats
+		runtime.ReadMemStats(&m)
+
+		// Forçar coleta de lixo apenas se o uso de memória estiver alto
+		if float64(m.Alloc)/1024/1024 > 100 { // Mais de 100MB alocados
+			runtime.GC()
+			log.Printf("Coleta de lixo forçada - Memória antes: %.2f MB", float64(m.Alloc)/1024/1024)
+
+			// Atualizar estatísticas após GC
+			runtime.ReadMemStats(&m)
+		}
+
+		log.Printf("Estatísticas de memória - Alocada: %.2f MB, Sistema: %.2f MB",
+			float64(m.Alloc)/1024/1024,
+			float64(m.Sys)/1024/1024)
+	}
 }

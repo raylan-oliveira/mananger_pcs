@@ -24,7 +24,6 @@ import (
 type CommandPayload struct {
 	Command string `json:"comando"`
 	Type    string `json:"tipo"`  // "cmd" ou "ps" para PowerShell
-	Senha   string `json:"senha"` // Senha para autenticação
 }
 
 // CommandResult representa o resultado da execução do comando
@@ -94,12 +93,6 @@ func commandHandler(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(decryptedData, &payload)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Erro ao deserializar payload: %v", err), http.StatusBadRequest)
-		return
-	}
-
-	// Verificar a senha
-	if payload.Senha != "senha_secreta_do_agente" {
-		http.Error(w, "Senha inválida", http.StatusUnauthorized)
 		return
 	}
 

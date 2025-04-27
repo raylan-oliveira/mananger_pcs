@@ -157,25 +157,24 @@ func saveSystemInfoToDB(info SystemInfo) error {
 
 // clearDatabase limpa o banco de dados mantendo a estrutura
 func clearDatabase() error {
-	// Em vez de excluir todas as linhas, vamos apenas excluir linhas com ID diferente de 1
-	_, err := db.Exec("DELETE FROM system_info WHERE id != 1")
-	if err != nil {
-		return fmt.Errorf("erro ao limpar linhas extras do banco de dados: %v", err)
-	}
-
 	// Verificar se existe uma linha com ID 1
 	var count int
-	err = db.QueryRow("SELECT COUNT(*) FROM system_info WHERE id = 1").Scan(&count)
+	err := db.QueryRow("SELECT COUNT(*) FROM system_info WHERE id = 1").Scan(&count)
 	if err != nil {
 		return fmt.Errorf("erro ao verificar existência de dados: %v", err)
 	}
 
-	// Se não existir uma linha com ID 1, não precisamos fazer nada
 	// Se existir, vamos limpar seus dados
 	if count > 0 {
 		_, err = db.Exec("UPDATE system_info SET info = '{}', timestamp = ? WHERE id = 1", time.Now())
 		if err != nil {
 			return fmt.Errorf("erro ao limpar dados da linha principal: %v", err)
+		}
+	} else {
+		// Se não existir, criar uma linha vazia com ID 1
+		_, err = db.Exec("INSERT INTO system_info (id, info, timestamp) VALUES (1, '{}', ?)", time.Now())
+		if err != nil {
+			return fmt.Errorf("erro ao criar linha principal vazia: %v", err)
 		}
 	}
 

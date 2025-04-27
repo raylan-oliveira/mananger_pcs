@@ -1,6 +1,0 @@
-@echo off
-echo Iniciando Agente HTTP...
-echo Aguardando carregamento dos drivers de rede...
-timeout /t 30
-cd /d "C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http"
-"C:\Users\raylan.lima\Dropbox\Dev\mananger_pcs\agente_http\agente_http.exe"

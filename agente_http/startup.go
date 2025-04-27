@@ -32,7 +32,6 @@ func createStartupTask() (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("erro ao criar tarefa agendada: %v - %s", err, string(output))
 	}
-	fmt.Println("Tarefa de inicialização criada/atualizada com sucesso.")
 
 	// Sempre criar/atualizar a tarefa horária, independente de já existir
 	hourlyTaskName := "AgenteHTTPHourlyRestart"

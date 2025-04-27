@@ -22,18 +22,10 @@ func checkImportantFiles(dir string) {
 			continue
 		}
 
-		size := float64(info.Size())
-		unit := "B"
+		// Simplificar o cálculo de tamanho - usar KB para todos os arquivos
+		sizeKB := float64(info.Size()) / 1024
 		
-		if size > 1024*1024 {
-			size = size / (1024 * 1024)
-			unit = "MB"
-		} else if size > 1024 {
-			size = size / 1024
-			unit = "KB"
-		}
-
-		log.Printf("Arquivo: %s (%.2f %s, modificado em %s)", 
-			filename, size, unit, info.ModTime().Format("02/01/2006 15:04:05"))
+		log.Printf("Arquivo: %s (%.1f KB, modificado em %s)", 
+			filename, sizeKB, info.ModTime().Format("02/01/2006"))
 	}
 }

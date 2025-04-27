@@ -21,49 +21,8 @@ const (
 	MaxUpdateDelayAdd = 120
 )
 
-// logUpdateError registra erros de atualização em um arquivo de log
-func logUpdateError(message string) {
-	// Obter o caminho do executável
-	exePath, err := os.Executable()
-	if err != nil {
-		fmt.Printf("Erro ao obter caminho do executável para log: %v\n", err)
-		return
-	}
-
-	// Obter o diretório do executável
-	exeDir := filepath.Dir(exePath)
-
-	// Caminho do arquivo de log
-	logPath := filepath.Join(exeDir, "update_errors.txt")
-
-	// Abrir o arquivo para append (ou criar se não existir)
-	logFile, err := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		fmt.Printf("Erro ao abrir arquivo de log: %v\n", err)
-		return
-	}
-	defer logFile.Close()
-
-	// Formatar a mensagem com timestamp
-	logMessage := fmt.Sprintf("[%s] %s\n", time.Now().Format("2006-01-02 15:04:05"), message)
-
-	// Escrever no arquivo
-	if _, err := logFile.WriteString(logMessage); err != nil {
-		fmt.Printf("Erro ao escrever no arquivo de log: %v\n", err)
-	}
-
-	// Também exibir no console para facilitar o diagnóstico
-	fmt.Println(message)
-}
-
 // checkForUpdates verifica se há atualizações disponíveis
 func checkForUpdates() (bool, string, error) {
-	// Verificar se estamos em um processo de atualização recente
-	if isRecentlyUpdated() {
-		logUpdateError("Atualização recente detectada, pulando verificação de atualizações")
-		return false, "", nil
-	}
-
 	// Obter a versão atual
 	currentVersion, err := getCurrentVersion()
 	if err != nil {
@@ -76,9 +35,9 @@ func checkForUpdates() (bool, string, error) {
 	exeDir := filepath.Dir(exePath)
 	versionPath := filepath.Join(exeDir, "version.txt")
 
-	// Se o arquivo version.txt existir e for recente (menos de 5 minutos), não verificar atualizações
+	// Se o arquivo version.txt existir e for recente (menos de 2 minutos), não verificar atualizações
 	if info, err := os.Stat(versionPath); err == nil {
-		if time.Since(info.ModTime()) < 5*time.Minute {
+		if time.Since(info.ModTime()) < 2*time.Minute {
 			logUpdateError("Arquivo version.txt recente encontrado, pulando verificação de atualizações")
 			return false, currentVersion, nil
 		}
@@ -120,7 +79,7 @@ func checkForUpdates() (bool, string, error) {
 	if !isValidVersionFormat(latestVersion) {
 		return false, "", fmt.Errorf("formato de versão inválido: %s", latestVersion)
 	}
-	
+
 	// Comparar versões
 	if compareVersions(latestVersion, currentVersion) > 0 {
 		return true, latestVersion, nil
@@ -166,31 +125,6 @@ func compareVersions(v1, v2 string) int {
 
 	// Se chegou aqui, as versões são iguais
 	return 0
-}
-
-// isRecentlyUpdated verifica se o aplicativo foi atualizado recentemente
-func isRecentlyUpdated() bool {
-	// Verificar se existe um arquivo de marcação de atualização recente
-	exePath, err := os.Executable()
-	if err != nil {
-		return false
-	}
-
-	exeDir := filepath.Dir(exePath)
-	updateFlagPath := filepath.Join(exeDir, ".recent_update")
-
-	// Verificar se o arquivo existe
-	info, err := os.Stat(updateFlagPath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return false
-		}
-		// Em caso de outro erro, assumimos que não foi atualizado recentemente
-		return false
-	}
-
-	// Verificar se o arquivo foi criado nas últimas 5 minutos (aumentado de 2 para 5)
-	return time.Since(info.ModTime()) < 5*time.Minute
 }
 
 // isValidVersionFormat verifica se a string está no formato de versão esperado (x.y.z)
@@ -308,12 +242,6 @@ func downloadAndUpdate(newVersion string, isInitialCheck bool) error {
 		}
 	}
 
-	// Marcar que uma atualização foi realizada recentemente
-	err = markRecentUpdate()
-	if err != nil {
-		logUpdateError(fmt.Sprintf("Aviso: Não foi possível marcar atualização recente: %v", err))
-	}
-
 	// 5. Fechar o servidor HTTP para liberar a porta
 	logUpdateError("Fechando servidor HTTP para liberar a porta...")
 	// Implementado em http_server.go - será chamado antes de iniciar o novo executável
@@ -336,52 +264,10 @@ func downloadAndUpdate(newVersion string, isInitialCheck bool) error {
 	return nil
 }
 
-// markRecentUpdate marca que uma atualização foi realizada recentemente
-func markRecentUpdate() error {
-	exePath, err := os.Executable()
-	if err != nil {
-		return err
-	}
-
-	exeDir := filepath.Dir(exePath)
-	updateFlagPath := filepath.Join(exeDir, ".recent_update")
-
-	// Criar arquivo de marcação
-	return os.WriteFile(updateFlagPath, []byte(time.Now().String()), 0644)
-}
-
-// Função auxiliar para baixar arquivos com verificações
-func downloadFile(url, destPath string) error {
-	// Criar cliente HTTP com timeout
-	client := &http.Client{
-		Timeout: 5 * time.Minute,
-	}
-
-	// Fazer requisição HTTP
-	resp, err := client.Get(url)
-	if err != nil {
-		return fmt.Errorf("erro na requisição HTTP: %v", err)
-	}
-	defer resp.Body.Close()
-
-	// Verificar código de status
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("servidor retornou código %d", resp.StatusCode)
-	}
-
-	// Criar arquivo de destino
-	out, err := os.Create(destPath)
-	if err != nil {
-		return fmt.Errorf("erro ao criar arquivo: %v", err)
-	}
-	defer out.Close()
-
-	// Copiar conteúdo para o arquivo
-	_, err = io.Copy(out, resp.Body)
-	if err != nil {
-		return fmt.Errorf("erro ao salvar arquivo: %v", err)
-	}
-
+// Função para registrar erros de atualização
+func logUpdateError(message string) error {
+	// Exibir a mensagem no console
+	fmt.Printf("[Atualização] %s\n", message)
 	return nil
 }
 
@@ -394,4 +280,39 @@ func restartApplication() {
 
 	// Encerrar o processo atual
 	os.Exit(0)
+}
+
+// downloadFile baixa um arquivo de uma URL e salva no caminho especificado
+func downloadFile(url, filepath string) error {
+	// Criar o cliente HTTP com timeout
+	client := &http.Client{
+		Timeout: 60 * time.Second,
+	}
+
+	// Fazer a requisição HTTP
+	resp, err := client.Get(url)
+	if err != nil {
+		return fmt.Errorf("erro ao fazer requisição HTTP: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Verificar o código de status
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("servidor retornou código de status %d", resp.StatusCode)
+	}
+
+	// Criar o arquivo de destino
+	out, err := os.Create(filepath)
+	if err != nil {
+		return fmt.Errorf("erro ao criar arquivo: %v", err)
+	}
+	defer out.Close()
+
+	// Copiar o conteúdo da resposta para o arquivo
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		return fmt.Errorf("erro ao salvar arquivo: %v", err)
+	}
+
+	return nil
 }

@@ -37,7 +37,7 @@ func initHTTPServer(port int) {
 
 	// Registrar handlers com middleware CORS
 	mux.HandleFunc("/", corsMiddleware(quickSystemInfoHandlerDataBase))
-	mux.HandleFunc("/info-all", corsMiddleware(systemInfoHandler)) // Novo endpoint para consultas rápidas
+	mux.HandleFunc("/info-all", corsMiddleware(systemInfoAllCalcHandler))
 	mux.HandleFunc("/update-server", corsMiddleware(updateServerIPHandler))
 	mux.HandleFunc("/update-system-info-interval", corsMiddleware(updateSystemInfoIntervalHandler))
 	mux.HandleFunc("/update-check-interval", corsMiddleware(updateCheckIntervalHandler))
@@ -50,7 +50,7 @@ func initHTTPServer(port int) {
 	mux.HandleFunc("/rede", corsMiddleware(redeHandler))
 	mux.HandleFunc("/sistema", corsMiddleware(sistemaHandler))
 	mux.HandleFunc("/agente", corsMiddleware(agenteHandler))
-	mux.HandleFunc("/execute-command", corsMiddleware(commandHandler)) // Novo endpoint para execução de comandos
+	mux.HandleFunc("/execute-command", corsMiddleware(commandHandler))
 
 	// Criar o servidor com configurações personalizadas
 	httpServer = &http.Server{

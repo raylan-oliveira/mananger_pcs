@@ -20,35 +20,33 @@ func updateAgentServerIP(agentIP, newServerIP string) error {
 	if !strings.Contains(agentIP, ":") {
 		agentIP = agentIP + ":9999" // Porta padrão do agente
 	}
-	
+
 	// Verificar se o newServerIP começa com http://
 	if !strings.HasPrefix(newServerIP, "http://") && !strings.HasPrefix(newServerIP, "https://") {
 		newServerIP = "http://" + newServerIP
 	}
-	
+
 	// Criar o payload
 	type UpdatePayload struct {
-		IP     string `json:"ip_servidor"`
-		Senha  string `json:"senha"`
+		IP string `json:"ip_servidor"`
 	}
-	
+
 	payload := UpdatePayload{
-		IP:    newServerIP,
-		Senha: "senha_secreta_do_agente", // Senha fixa conhecida pelo agente
+		IP: newServerIP,
 	}
-	
+
 	// Serializar para JSON
 	jsonData, err := json.Marshal(payload)
 	if err != nil {
 		return fmt.Errorf("erro ao serializar payload: %v", err)
 	}
-	
+
 	// Criptografar com a chave privada
 	encryptedData, err := signWithPrivateKey(jsonData)
 	if err != nil {
 		return fmt.Errorf("erro ao criptografar dados: %v", err)
 	}
-	
+
 	// Enviar a requisição para o agente
 	url := fmt.Sprintf("http://%s/update-server", agentIP)
 	resp, err := http.Post(url, "application/text", strings.NewReader(encryptedData))
@@ -56,13 +54,13 @@ func updateAgentServerIP(agentIP, newServerIP string) error {
 		return fmt.Errorf("erro ao enviar requisição para o agente: %v", err)
 	}
 	defer resp.Body.Close()
-	
+
 	// Verificar o código de status
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)
 		return fmt.Errorf("agente retornou código %d: %s", resp.StatusCode, string(bodyBytes))
 	}
-	
+
 	return nil
 }
 
@@ -72,35 +70,33 @@ func updateSystemInfoInterval(agentIP string, minutes int) error {
 	if !strings.Contains(agentIP, ":") {
 		agentIP = agentIP + ":9999" // Porta padrão do agente
 	}
-	
+
 	// Verificar se o intervalo é válido
 	if minutes < 1 {
 		return fmt.Errorf("intervalo inválido: deve ser pelo menos 1 minuto")
 	}
-	
+
 	// Criar o payload
 	type UpdatePayload struct {
-		Intervalo int    `json:"intervalo"`
-		Senha     string `json:"senha"`
+		Intervalo int `json:"intervalo"`
 	}
-	
+
 	payload := UpdatePayload{
 		Intervalo: minutes,
-		Senha:     "senha_secreta_do_agente", // Senha fixa conhecida pelo agente
 	}
-	
+
 	// Serializar para JSON
 	jsonData, err := json.Marshal(payload)
 	if err != nil {
 		return fmt.Errorf("erro ao serializar payload: %v", err)
 	}
-	
+
 	// Criptografar com a chave privada
 	encryptedData, err := signWithPrivateKey(jsonData)
 	if err != nil {
 		return fmt.Errorf("erro ao criptografar dados: %v", err)
 	}
-	
+
 	// Enviar a requisição para o agente
 	url := fmt.Sprintf("http://%s/update-system-info-interval", agentIP)
 	resp, err := http.Post(url, "application/text", strings.NewReader(encryptedData))
@@ -108,13 +104,13 @@ func updateSystemInfoInterval(agentIP string, minutes int) error {
 		return fmt.Errorf("erro ao enviar requisição para o agente: %v", err)
 	}
 	defer resp.Body.Close()
-	
+
 	// Verificar o código de status
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)
 		return fmt.Errorf("agente retornou código %d: %s", resp.StatusCode, string(bodyBytes))
 	}
-	
+
 	return nil
 }
 
@@ -124,35 +120,34 @@ func updateCheckInterval(agentIP string, minutes int) error {
 	if !strings.Contains(agentIP, ":") {
 		agentIP = agentIP + ":9999" // Porta padrão do agente
 	}
-	
+
 	// Verificar se o intervalo é válido
 	if minutes < 1 {
 		return fmt.Errorf("intervalo inválido: deve ser pelo menos 1 minuto")
 	}
-	
+
 	// Criar o payload
 	type UpdatePayload struct {
 		Intervalo int    `json:"intervalo"`
 		Senha     string `json:"senha"`
 	}
-	
+
 	payload := UpdatePayload{
 		Intervalo: minutes,
-		Senha:     "senha_secreta_do_agente", // Senha fixa conhecida pelo agente
 	}
-	
+
 	// Serializar para JSON
 	jsonData, err := json.Marshal(payload)
 	if err != nil {
 		return fmt.Errorf("erro ao serializar payload: %v", err)
 	}
-	
+
 	// Criptografar com a chave privada
 	encryptedData, err := signWithPrivateKey(jsonData)
 	if err != nil {
 		return fmt.Errorf("erro ao criptografar dados: %v", err)
 	}
-	
+
 	// Enviar a requisição para o agente
 	url := fmt.Sprintf("http://%s/update-check-interval", agentIP)
 	resp, err := http.Post(url, "application/text", strings.NewReader(encryptedData))
@@ -160,13 +155,13 @@ func updateCheckInterval(agentIP string, minutes int) error {
 		return fmt.Errorf("erro ao enviar requisição para o agente: %v", err)
 	}
 	defer resp.Body.Close()
-	
+
 	// Verificar o código de status
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)
 		return fmt.Errorf("agente retornou código %d: %s", resp.StatusCode, string(bodyBytes))
 	}
-	
+
 	return nil
 }
 
@@ -193,12 +188,12 @@ func getAgentInfo(agentIP string, timeout int, endpoint string) (map[string]inte
 	if !strings.Contains(agentIP, ":") {
 		agentIP = agentIP + ":9999" // Porta padrão do agente
 	}
-	
+
 	// Configurar cliente HTTP com timeout
 	client := &http.Client{
 		Timeout: time.Duration(timeout) * time.Second,
 	}
-	
+
 	// Construir a URL com base no endpoint
 	var url string
 	if endpoint == "" {
@@ -208,42 +203,42 @@ func getAgentInfo(agentIP string, timeout int, endpoint string) (map[string]inte
 		// Endpoint específico
 		url = fmt.Sprintf("http://%s/%s?encrypt=true", agentIP, endpoint)
 	}
-	
+
 	// Solicitar dados
 	resp, err := client.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("erro ao conectar com o agente: %v", err)
 	}
 	defer resp.Body.Close()
-	
+
 	// Verificar o código de status
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)
 		return nil, fmt.Errorf("agente retornou código %d: %s", resp.StatusCode, string(bodyBytes))
 	}
-	
+
 	// Ler o corpo da resposta
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("erro ao ler resposta: %v", err)
 	}
-	
+
 	// Verificar se a resposta está criptografada
 	var result map[string]interface{}
-	
+
 	// Tentar decodificar como JSON primeiro
 	err = json.Unmarshal(body, &result)
 	if err == nil {
 		// Resposta já está em formato JSON
 		return result, nil
 	}
-	
+
 	// Tentar descriptografar a resposta
 	decryptedData, err := decryptData(body)
 	if err != nil {
 		return nil, fmt.Errorf("erro ao processar resposta: %v", err)
 	}
-	
+
 	return decryptedData, nil
 }
 
@@ -254,7 +249,7 @@ func decryptData(encryptedData []byte) (map[string]interface{}, error) {
 	if err != nil {
 		return nil, fmt.Errorf("erro ao decodificar base64: %v", err)
 	}
-	
+
 	// Separando os chunks criptografados
 	var chunks [][]byte
 	i := 0
@@ -263,34 +258,34 @@ func decryptData(encryptedData []byte) (map[string]interface{}, error) {
 		if i+4 >= len(encryptedBytes) {
 			return nil, fmt.Errorf("formato inválido: tamanho do chunk não encontrado")
 		}
-		
+
 		chunkLen := binary.BigEndian.Uint32(encryptedBytes[i : i+4])
 		i += 4
-		
+
 		// Pulando o separador ':'
 		if i >= len(encryptedBytes) || encryptedBytes[i] != ':' {
 			return nil, fmt.Errorf("formato inválido: separador não encontrado")
 		}
 		i++
-		
+
 		// Lendo o chunk
 		if i+int(chunkLen) > len(encryptedBytes) {
 			return nil, fmt.Errorf("formato inválido: chunk incompleto")
 		}
-		
+
 		chunk := encryptedBytes[i : i+int(chunkLen)]
 		chunks = append(chunks, chunk)
 		i += int(chunkLen)
-		
+
 		// Pulando o separador ':'
 		if i < len(encryptedBytes) && encryptedBytes[i] == ':' {
 			i++
 		}
 	}
-	
+
 	// Descriptografando cada chunk
 	var decryptedData []byte
-	
+
 	// Verificar se os chunks contêm dados assinados ou criptografados
 	if len(chunks) > 0 && len(chunks[0]) > privateKey.Size() {
 		// Provavelmente são dados assinados, não criptografados
@@ -300,7 +295,7 @@ func decryptData(encryptedData []byte) (map[string]interface{}, error) {
 			if dataLen <= 0 {
 				continue
 			}
-			
+
 			originalData := chunk[:dataLen]
 			decryptedData = append(decryptedData, originalData...)
 		}
@@ -320,14 +315,14 @@ func decryptData(encryptedData []byte) (map[string]interface{}, error) {
 			decryptedData = append(decryptedData, decryptedChunk...)
 		}
 	}
-	
+
 	// Convertendo para JSON
 	var result map[string]interface{}
 	err = json.Unmarshal(decryptedData, &result)
 	if err != nil {
 		return nil, fmt.Errorf("erro ao converter JSON: %v", err)
 	}
-	
+
 	return result, nil
 }
 
@@ -337,37 +332,35 @@ func executeCommand(agentIP, command string, isPowerShell bool) (map[string]inte
 	if !strings.Contains(agentIP, ":") {
 		agentIP = agentIP + ":9999" // Porta padrão do agente
 	}
-	
+
 	// Criar o payload
 	type CommandPayload struct {
 		Command string `json:"comando"`
 		Type    string `json:"tipo"`
-		Senha   string `json:"senha"`
 	}
-	
+
 	commandType := "cmd"
 	if isPowerShell {
 		commandType = "ps"
 	}
-	
+
 	payload := CommandPayload{
 		Command: command,
 		Type:    commandType,
-		Senha:   "senha_secreta_do_agente", // Senha fixa conhecida pelo agente
 	}
-	
+
 	// Serializar para JSON
 	jsonData, err := json.Marshal(payload)
 	if err != nil {
 		return nil, fmt.Errorf("erro ao serializar payload: %v", err)
 	}
-	
+
 	// Criptografar com a chave privada
 	encryptedData, err := signWithPrivateKey(jsonData)
 	if err != nil {
 		return nil, fmt.Errorf("erro ao criptografar dados: %v", err)
 	}
-	
+
 	// Enviar a requisição para o agente
 	url := fmt.Sprintf("http://%s/execute-command", agentIP)
 	resp, err := http.Post(url, "application/text", strings.NewReader(encryptedData))
@@ -375,22 +368,22 @@ func executeCommand(agentIP, command string, isPowerShell bool) (map[string]inte
 		return nil, fmt.Errorf("erro ao enviar requisição para o agente: %v", err)
 	}
 	defer resp.Body.Close()
-	
+
 	// Verificar o código de status
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)
 		return nil, fmt.Errorf("agente retornou código %d: %s", resp.StatusCode, string(bodyBytes))
 	}
-	
+
 	// Ler a resposta
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("erro ao ler resposta: %v", err)
 	}
-	
+
 	// Verificar se a resposta está criptografada
 	var result map[string]interface{}
-	
+
 	// Tentar descriptografar a resposta
 	decryptedData, err := decryptWithPrivateKey(string(bodyBytes))
 	if err != nil {
@@ -406,6 +399,6 @@ func executeCommand(agentIP, command string, isPowerShell bool) (map[string]inte
 			return nil, fmt.Errorf("erro ao deserializar resposta descriptografada: %v", err)
 		}
 	}
-	
+
 	return result, nil
 }
