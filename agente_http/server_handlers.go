@@ -74,8 +74,14 @@ func systemInfoAllCalcHandler(w http.ResponseWriter, r *http.Request) {
 	// Coletar informações do sistema em tempo real
 	infoCompleta, err := collectAllInfo()
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Erro ao coletar informações do sistema: %v", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("[systemInfoAllCalcHandler] Erro ao coletar informações do sistema: %v", err), http.StatusInternalServerError)
 		return
+	}
+
+	// Salva as informações coletadas no banco de dados
+	err = saveSystemInfoToDB(infoCompleta)
+	if err != nil {
+		fmt.Printf("[systemInfoAllCalcHandler] Erro ao salvar informações no banco de dados: %v\n", err)
 	}
 
 	// Converter para JSON
