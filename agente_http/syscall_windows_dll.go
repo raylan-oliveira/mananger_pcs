@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os/exec"
 	"syscall"
 )
 
@@ -15,9 +16,8 @@ var (
 
 	// Procedimentos do kernel32.dll
 	getSystemInfoFn            *syscall.Proc
+	getNativeSystemInfoFn      *syscall.Proc
 	getComputerNameExFn        *syscall.Proc
-	getTickCount64Fn           *syscall.Proc
-	getSystemTimeFn            *syscall.Proc
 	getUserNameFn              *syscall.Proc
 	isWow64ProcessFn           *syscall.Proc
 	getCurrentProcessFn        *syscall.Proc
@@ -45,6 +45,15 @@ var (
 
 	// Procedimentos do iphlpapi.dll
 	getNetworkParamsFn *syscall.Proc
+
+	// Adicionar DLL para impressoras
+	winspool32DLL *syscall.DLL
+
+	// Procedimentos para impressoras
+	enumPrintersFn *syscall.Proc
+	openPrinterFn  *syscall.Proc
+	getPrinterFn   *syscall.Proc
+	closePrinterFn *syscall.Proc
 
 	// Flag para indicar se a inicialização foi concluída
 	dllsInitialized bool
@@ -81,9 +90,8 @@ func initWindowsDLLs() error {
 
 		// Carregar procedimentos do kernel32.dll
 		getSystemInfoFn, _ = kernel32DLL.FindProc("GetSystemInfo")
+		getNativeSystemInfoFn, _ = kernel32DLL.FindProc("GetNativeSystemInfo")
 		getComputerNameExFn, _ = kernel32DLL.FindProc("GetComputerNameExW")
-		getTickCount64Fn, _ = kernel32DLL.FindProc("GetTickCount64")
-		getSystemTimeFn, _ = kernel32DLL.FindProc("GetSystemTime")
 		getUserNameFn, _ = kernel32DLL.FindProc("GetUserNameW")
 		isWow64ProcessFn, _ = kernel32DLL.FindProc("IsWow64Process")
 		getCurrentProcessFn, _ = kernel32DLL.FindProc("GetCurrentProcess")
@@ -133,8 +141,29 @@ func initWindowsDLLs() error {
 		}
 	}
 
+	// Carregar winspool.drv para impressoras
+	if winspool32DLL == nil {
+		winspool32DLL, err = syscall.LoadDLL("winspool.drv")
+		if err == nil {
+			enumPrintersFn, _ = winspool32DLL.FindProc("EnumPrintersW")
+			openPrinterFn, _ = winspool32DLL.FindProc("OpenPrinterW")
+			getPrinterFn, _ = winspool32DLL.FindProc("GetPrinterW")
+			closePrinterFn, _ = winspool32DLL.FindProc("ClosePrinter")
+		}
+	}
+
 	// Marcar como inicializado
 	dllsInitialized = true
 
 	return nil
+}
+
+// Executa um comando do Windows e retorna a saída como string
+func executeCommand(command string, args ...string) (string, error) {
+	cmd := exec.Command(command, args...)
+	output, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+	return string(output), nil
 }

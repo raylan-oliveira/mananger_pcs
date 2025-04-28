@@ -10,7 +10,7 @@ func getDiskInfo() []map[string]interface{} {
 
 	// Fix: Use PowerShell for more reliable disk information
 	cmd := exec.Command("powershell", "-Command",
-		"Get-WmiObject Win32_LogicalDisk | "+
+		"Get-CimInstance Win32_LogicalDisk | "+
 			"Select-Object DeviceID, FileSystem, Size, FreeSpace | "+
 			"ForEach-Object { $_.DeviceID + ',' + $_.FileSystem + ',' + $_.Size + ',' + $_.FreeSpace }")
 	output, err := cmd.Output()

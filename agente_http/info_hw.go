@@ -50,7 +50,7 @@ func getHardwareInfo() map[string]interface{} {
 	// Garantir que os campos básicos nunca sejam nulos
 	if info["fabricante"] == nil {
 		// Tentar método alternativo para obter fabricante
-		cmd = exec.Command("powershell", "-Command", "(Get-WmiObject -Class Win32_ComputerSystem).Manufacturer")
+		cmd = exec.Command("powershell", "-Command", "(Get-CimInstance -Class Win32_ComputerSystem).Manufacturer")
 		output, err = cmd.Output()
 		if err == nil {
 			info["fabricante"] = strings.TrimSpace(string(output))
@@ -61,7 +61,7 @@ func getHardwareInfo() map[string]interface{} {
 
 	if info["modelo"] == nil {
 		// Tentar método alternativo para obter modelo
-		cmd = exec.Command("powershell", "-Command", "(Get-WmiObject -Class Win32_ComputerSystem).Model")
+		cmd = exec.Command("powershell", "-Command", "(Get-CimInstance -Class Win32_ComputerSystem).Model")
 		output, err = cmd.Output()
 		if err == nil {
 			info["modelo"] = strings.TrimSpace(string(output))

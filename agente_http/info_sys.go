@@ -122,7 +122,7 @@ func getOSVersion(rawSystemInfo map[string]string) string {
 	}
 
 	// Método 1: Usando PowerShell para obter a versão do Windows
-	cmd := exec.Command("powershell", "-Command", "(Get-WmiObject -class Win32_OperatingSystem).Version")
+	cmd := exec.Command("powershell", "-Command", "(Get-CimInstance -class Win32_OperatingSystem).Version")
 	output, err := cmd.Output()
 	if err == nil && len(output) > 0 {
 		return strings.TrimSpace(string(output))
@@ -304,7 +304,7 @@ func getPrinterInfo() []map[string]interface{} {
 	// Método 2: Usar WMI para obter informações das impressoras se o PowerShell falhar
 	if !powershellSuccess {
 		cmd := exec.Command("powershell", "-Command",
-			"Get-WmiObject -Class Win32_Printer | ForEach-Object { $name = $_.Name; $driver = $_.DriverName; $port = $_.PortName; $status = $_.Status; $shared = $_.Shared; $shareName = $_.ShareName; $location = $_.Location; Write-Host \"$name|$driver|$port|$status|$shared|$shareName|$location\" }")
+			"Get-CimInstance -Class Win32_Printer | ForEach-Object { $name = $_.Name; $driver = $_.DriverName; $port = $_.PortName; $status = $_.Status; $shared = $_.Shared; $shareName = $_.ShareName; $location = $_.Location; Write-Host \"$name|$driver|$port|$status|$shared|$shareName|$location\" }")
 
 		output, err := cmd.Output()
 		if err == nil && len(output) > 0 {
@@ -485,7 +485,7 @@ func getPrinterInfo() []map[string]interface{} {
 			} else {
 				// Método alternativo usando WMI para obter trabalhos pendentes
 				cmd = exec.Command("powershell", "-Command",
-					fmt.Sprintf("(Get-WmiObject -Class Win32_PrintJob | Where-Object { $_.PrinterName -eq \"%s\" } | Measure-Object).Count", printerName))
+					fmt.Sprintf("(Get-CimInstance -Class Win32_PrintJob | Where-Object { $_.PrinterName -eq \"%s\" } | Measure-Object).Count", printerName))
 				output, err = cmd.Output()
 				if err == nil && len(output) > 0 {
 					jobCountStr := strings.TrimSpace(string(output))
@@ -527,7 +527,7 @@ func getLoggedUsers() []string {
 	var users []string
 
 	// Obter usuários logados usando PowerShell
-	cmd := exec.Command("powershell", "-Command", "Get-WmiObject -Class Win32_ComputerSystem | Select-Object -ExpandProperty UserName")
+	cmd := exec.Command("powershell", "-Command", "Get-CimInstance -Class Win32_ComputerSystem | Select-Object -ExpandProperty UserName")
 	output, err := cmd.Output()
 	if err == nil {
 		username := strings.TrimSpace(string(output))

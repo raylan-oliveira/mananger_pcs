@@ -92,10 +92,10 @@ func getGPUInfoSyscall() map[string]interface{} {
 				gpu["nome"] = getRegistryString(hSubKey, "DriverDesc")
 
 				// Obter versão do driver
-				gpu["versao_driver"] = getRegistryString(hSubKey, "DriverVersion")
+				gpu["driver_versao"] = getRegistryString(hSubKey, "DriverVersion")
 
 				// Obter data do driver
-				gpu["data_driver"] = getRegistryString(hSubKey, "DriverDate")
+				gpu["driver_data"] = getRegistryString(hSubKey, "DriverDate")
 
 				// Adicionar à lista se tiver um nome válido
 				if gpu["nome"] != "Desconhecido" && gpu["nome"] != "" {
@@ -113,7 +113,7 @@ func getGPUInfoSyscall() map[string]interface{} {
 	if len(gpus) == 0 {
 		gpu := make(map[string]interface{})
 		gpu["nome"] = "Adaptador de Vídeo Desconhecido"
-		gpu["versao_driver"] = "Desconhecida"
+		gpu["driver_versao"] = "Desconhecida"
 		gpus = append(gpus, gpu)
 	}
 

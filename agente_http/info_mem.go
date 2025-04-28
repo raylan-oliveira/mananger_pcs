@@ -9,7 +9,7 @@ func getDetailedMemoryInfo() map[string]interface{} {
 	info := make(map[string]interface{})
 
 	// Método principal: Usar PowerShell para obter memória total
-	cmd := exec.Command("powershell", "-Command", "(Get-WmiObject -Class Win32_ComputerSystem).TotalPhysicalMemory")
+	cmd := exec.Command("powershell", "-Command", "(Get-CimInstance -Class Win32_ComputerSystem).TotalPhysicalMemory")
 	output, err := cmd.Output()
 	if err == nil && len(output) > 0 {
 		memBytes := parseUint64(strings.TrimSpace(string(output)))
@@ -43,7 +43,7 @@ func getDetailedMemoryInfo() map[string]interface{} {
 	if _, ok := info["total"]; !ok {
 		// Comando PowerShell alternativo
 		cmd := exec.Command("powershell", "-Command",
-			"$os = Get-WmiObject Win32_OperatingSystem; "+
+			"$os = Get-CimInstance Win32_OperatingSystem; "+
 				"$total = $os.TotalVisibleMemorySize; "+
 				"Write-Host $total")
 		output, err := cmd.Output()

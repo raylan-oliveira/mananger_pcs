@@ -8,7 +8,7 @@ import (
 
 func getCPUModel() string {
 	// Usando PowerShell para obter informações do processador de forma mais confiável
-	cmd := exec.Command("powershell", "-Command", "(Get-WmiObject -Class Win32_Processor).Name")
+	cmd := exec.Command("powershell", "-Command", "(Get-CimInstance -Class Win32_Processor).Name")
 	output, err := cmd.Output()
 	if err == nil && len(output) > 0 {
 		return strings.TrimSpace(string(output))

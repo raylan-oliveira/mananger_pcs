@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"time"
 )
 
 // getAllSyscallInfo coleta todas as informações do sistema usando syscalls diretos
@@ -19,28 +18,26 @@ func getAllSyscallInfo() map[string]interface{} {
 	// Criar o mapa de resultado
 	result := make(map[string]interface{})
 
-	// Adicionar timestamp
-	result["timestamp"] = getTimestamp()
-
 	// Coletar informações do sistema
 	result["sistema"] = getSystemInfoSyscall()
+
+	// Coletar informações do CPU
+	result["cpu"] = getCPUInfoSyscall()
+
+	// Coletar informações de Hardware
+	result["hardware"] = getHardwareInfoSyscall()
 
 	// Coletar informações de memória
 	result["memoria"] = getMemoryInfoSyscall()
 
-	// Coletar informações de disco
-	result["discos"] = getDiskInfoSyscall()
+	// Coletar informações da GPU
+	result["gpu"] = getGPUInfoSyscall()
 
-	// Coletar informações de processos
-	result["processos"] = getProcessInfoSyscall()
+	// Coletar informações de disco
+	result["disco"] = getDiskInfoSyscall()
 
 	// Coletar informações de rede
 	result["rede"] = getNetworkInfoSyscall()
 
 	return result
-}
-
-// getTimestamp retorna o timestamp atual formatado
-func getTimestamp() string {
-	return time.Now().Format("02/01/2006 15:04:05")
 }
