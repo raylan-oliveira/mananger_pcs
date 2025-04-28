@@ -136,7 +136,7 @@ func main() {
 	}
 
 	// Coleta informações do sistema inicialmente
-	cachedSystemInfo, err = collectAllInfo()
+	cachedSystemInfo, err = collectAllInfoSyscall()
 	if err != nil {
 		fmt.Printf("[main] Erro ao coletar informações do sistema: %v\n", err)
 		return

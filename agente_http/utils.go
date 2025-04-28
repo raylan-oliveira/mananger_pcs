@@ -138,7 +138,7 @@ func manageSystemInfoUpdates() {
 		select {
 		case <-ticker.C:
 			// Coletar informações atualizadas do sistema
-			infoAtualizada, err := collectAllInfo()
+			infoAtualizada, err := collectAllInfoSyscall()
 			if err != nil {
 				fmt.Printf("Erro ao coletar informações atualizadas: %v\n", err)
 				continue

@@ -130,27 +130,6 @@ func main() {
 				fmt.Println("Sistema Operacional: N/A")
 			}
 
-			// Extrair informações do disco principal (C:)
-			if discos, ok := info["discos"].([]interface{}); ok && len(discos) > 0 {
-				for _, d := range discos {
-					disco, ok := d.(map[string]interface{})
-					if !ok {
-						continue
-					}
-
-					if dispositivo, ok := disco["dispositivo"]; ok && dispositivo == "C:" {
-						if totalGB, ok := disco["total_gb"]; ok {
-							fmt.Printf("Disco C: %.2f GB\n", totalGB)
-						} else {
-							fmt.Println("Disco C: N/A")
-						}
-						break
-					}
-				}
-			} else {
-				fmt.Println("Disco C: N/A")
-			}
-
 			// Extrair informações da versão do agente
 			if agente, ok := info["agente"].(map[string]interface{}); ok {
 				if versao, ok := agente["versao_agente"]; ok {

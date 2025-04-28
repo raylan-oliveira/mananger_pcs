@@ -3,25 +3,152 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"os/exec"
 	"strings"
 	"syscall"
 	"unsafe"
 )
 
-func getDiskInfoSyscall() map[string]interface{} {
-	info := make(map[string]interface{})
+func getDiskInfoSyscallOld() []map[string]interface{} {
+	var disks []map[string]interface{}
 
 	// Inicializar as DLLs e procedimentos
 	err := initWindowsDLLs()
 	if err != nil {
-		info["erro"] = err.Error()
-		return info
+		disk := make(map[string]interface{})
+		disk["dispositivo"] = "N/A"
+		disk["sistema_arquivos"] = "N/A"
+		disk["total_gb"] = 0.0
+		disk["livre_gb"] = 0.0
+		disk["usado_gb"] = 0.0
+		disk["percentual_uso"] = 0.0
+		disks = append(disks, disk)
+		return disks
+	}
+
+	// Fix: Use PowerShell for more reliable disk information
+	cmd := exec.Command("powershell", "-Command",
+		"Get-CimInstance Win32_LogicalDisk | "+
+			"Select-Object DeviceID, FileSystem, Size, FreeSpace | "+
+			"ForEach-Object { $_.DeviceID + ',' + $_.FileSystem + ',' + $_.Size + ',' + $_.FreeSpace }")
+	output, err := cmd.Output()
+	if err == nil {
+		lines := strings.Split(string(output), "\n")
+		for _, line := range lines {
+			line = strings.TrimSpace(line)
+			if line == "" {
+				continue
+			}
+
+			parts := strings.Split(line, ",")
+			if len(parts) >= 4 {
+				deviceID := parts[0]
+				fileSystem := parts[1]
+				size := parseUint64(parts[2])
+				freeSpace := parseUint64(parts[3])
+				usedSpace := size - freeSpace
+
+				disk := make(map[string]interface{})
+				disk["dispositivo"] = deviceID
+				disk["sistema_arquivos"] = fileSystem
+				disk["total_gb"] = float64(size) / 1024 / 1024 / 1024
+				disk["livre_gb"] = float64(freeSpace) / 1024 / 1024 / 1024
+				disk["usado_gb"] = float64(usedSpace) / 1024 / 1024 / 1024
+				if size > 0 {
+					disk["percentual_uso"] = float64(usedSpace) * 100 / float64(size)
+				} else {
+					disk["percentual_uso"] = 0.0
+				}
+
+				disks = append(disks, disk)
+			}
+		}
+	}
+
+	// If the first method fails, try the original WMIC approach with better parsing
+	if len(disks) == 0 {
+		cmd := exec.Command("wmic", "logicaldisk", "get", "DeviceID,FileSystem,Size,FreeSpace", "/format:csv")
+		output, err := cmd.Output()
+		if err == nil {
+			lines := strings.Split(string(output), "\n")
+			for _, line := range lines {
+				if strings.Contains(line, ",") && !strings.Contains(line, "Node") {
+					parts := strings.Split(line, ",")
+					if len(parts) >= 5 {
+						deviceID := strings.TrimSpace(parts[1])
+						fileSystem := strings.TrimSpace(parts[2])
+						size := parseUint64(strings.TrimSpace(parts[3]))
+						freeSpace := parseUint64(strings.TrimSpace(parts[4]))
+						usedSpace := size - freeSpace
+
+						disk := make(map[string]interface{})
+						disk["dispositivo"] = deviceID
+						disk["sistema_arquivos"] = fileSystem
+						disk["total_gb"] = float64(size) / 1024 / 1024 / 1024
+						disk["livre_gb"] = float64(freeSpace) / 1024 / 1024 / 1024
+						disk["usado_gb"] = float64(usedSpace) / 1024 / 1024 / 1024
+						if size > 0 {
+							disk["percentual_uso"] = float64(usedSpace) * 100 / float64(size)
+						} else {
+							disk["percentual_uso"] = 0.0
+						}
+
+						disks = append(disks, disk)
+					}
+				}
+			}
+		}
+	}
+
+	// Garantindo que retorna pelo menos um disco vazio se nenhum for encontrado
+	if len(disks) == 0 {
+		disk := make(map[string]interface{})
+		disk["dispositivo"] = "N/A"
+		disk["sistema_arquivos"] = "N/A"
+		disk["total_gb"] = 0.0
+		disk["livre_gb"] = 0.0
+		disk["usado_gb"] = 0.0
+		disk["percentual_uso"] = 0.0
+		disks = append(disks, disk)
+	}
+
+	return disks
+}
+
+func getDiskInfoSyscall() []map[string]interface{} {
+	var disks []map[string]interface{}
+
+	// Inicializar as DLLs e procedimentos
+	err := initWindowsDLLs()
+	if err != nil {
+		disk := make(map[string]interface{})
+		disk["modelo"] = "N/A"
+		disk["nome_amigavel"] = "N/A"
+		disk["numero_serie"] = "N/A"
+		disk["status_operacional"] = "N/A"
+		disk["status_saude"] = "N/A"
+		disk["tipo_barramento"] = "N/A"
+		disk["tipo_midia"] = "N/A"
+		disk["versao_firmware"] = "N/A"
+		disk["letras"] = make([]map[string]interface{}, 0)
+		disks = append(disks, disk)
+		return disks
 	}
 
 	// Verificar se temos os procedimentos necessários
 	if getLogicalDrivesFn == nil || getDiskFreeSpaceExFn == nil || getVolumeInformationFn == nil {
-		info["erro"] = "Não foi possível carregar funções de disco"
-		return info
+		disk := make(map[string]interface{})
+		disk["modelo"] = "N/A"
+		disk["nome_amigavel"] = "N/A"
+		disk["numero_serie"] = "N/A"
+		disk["status_operacional"] = "N/A"
+		disk["status_saude"] = "N/A"
+		disk["tipo_barramento"] = "N/A"
+		disk["tipo_midia"] = "N/A"
+		disk["versao_firmware"] = "N/A"
+		disk["letras"] = make([]map[string]interface{}, 0)
+		disks = append(disks, disk)
+		return disks
 	}
 
 	// Primeiro, obter informações detalhadas dos discos físicos usando Get-CimInstance e Get-PhysicalDisk
@@ -679,9 +806,7 @@ func getDiskInfoSyscall() map[string]interface{} {
 		discos = append(discos, diskGenerico)
 	}
 
-	info["discos"] = discos
-
-	return info
+	return discos
 }
 
 // Formata o número de série do volume no formato padrão (XXXX-XXXX)

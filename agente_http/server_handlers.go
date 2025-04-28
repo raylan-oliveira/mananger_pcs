@@ -72,7 +72,7 @@ func quickSystemInfoHandlerDataBase(w http.ResponseWriter, r *http.Request) {
 // Handler para fornecer informações do sistema calculando
 func systemInfoAllCalcHandler(w http.ResponseWriter, r *http.Request) {
 	// Coletar informações do sistema em tempo real
-	infoCompleta, err := collectAllInfo()
+	infoCompleta, err := collectAllInfoSyscall()
 	if err != nil {
 		http.Error(w, fmt.Sprintf("[systemInfoAllCalcHandler] Erro ao coletar informações do sistema: %v", err), http.StatusInternalServerError)
 		return
@@ -346,7 +346,7 @@ func updateCheckIntervalHandler(w http.ResponseWriter, r *http.Request) {
 // Handler para informações de CPU
 func cpuHandler(w http.ResponseWriter, r *http.Request) {
 	// Obter informações atualizadas de CPU
-	cpuInfo := getCPUInfo()
+	cpuInfo := getCPUInfoSyscall()
 
 	// Converter para JSON
 	jsonData, err := json.MarshalIndent(cpuInfo, "", "  ")
@@ -379,7 +379,7 @@ func cpuHandler(w http.ResponseWriter, r *http.Request) {
 // Handler para informações de discos
 func discosHandler(w http.ResponseWriter, r *http.Request) {
 	// Obter informações atualizadas de discos
-	discosInfo := getDiskInfo()
+	discosInfo := getDiskInfoSyscall()
 
 	// Criar um mapa para encapsular o array
 	response := map[string]interface{}{
@@ -417,7 +417,7 @@ func discosHandler(w http.ResponseWriter, r *http.Request) {
 // Handler para informações de GPU
 func gpuHandler(w http.ResponseWriter, r *http.Request) {
 	// Obter informações atualizadas de GPU
-	gpuInfo := getGPUInfo()
+	gpuInfo := getGPUInfoSyscall()
 
 	// Criar um mapa para encapsular o array
 	response := map[string]interface{}{
@@ -455,7 +455,7 @@ func gpuHandler(w http.ResponseWriter, r *http.Request) {
 // Handler para informações de hardware
 func hardwareHandler(w http.ResponseWriter, r *http.Request) {
 	// Obter informações atualizadas de hardware
-	hardwareInfo := getHardwareInfo()
+	hardwareInfo := getHardwareInfoSyscall()
 
 	// Converter para JSON
 	jsonData, err := json.MarshalIndent(hardwareInfo, "", "  ")
@@ -488,7 +488,7 @@ func hardwareHandler(w http.ResponseWriter, r *http.Request) {
 // Handler para informações de memória
 func memoriaHandler(w http.ResponseWriter, r *http.Request) {
 	// Obter informações atualizadas de memória
-	memoriaInfo := getDetailedMemoryInfo()
+	memoriaInfo := getMemoryInfoSyscall()
 
 	// Converter para JSON
 	jsonData, err := json.MarshalIndent(memoriaInfo, "", "  ")
@@ -518,43 +518,10 @@ func memoriaHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Handler para informações de processos
-func processosHandler(w http.ResponseWriter, r *http.Request) {
-	// Obter informações atualizadas de processos
-	processosInfo := getProcessInfo()
-
-	// Converter para JSON
-	jsonData, err := json.MarshalIndent(processosInfo, "", "  ")
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Erro ao serializar dados: %v", err), http.StatusInternalServerError)
-		return
-	}
-
-	// Verificar se deve criptografar os dados
-	if encriptado {
-		// Criptografar os dados
-		encryptedData, err := encryptWithPublicKey(jsonData)
-		if err != nil {
-			errMsg := fmt.Sprintf("Erro ao criptografar dados: %v", err)
-			fmt.Println(errMsg)
-			http.Error(w, errMsg, http.StatusInternalServerError)
-			return
-		}
-
-		// Definir cabeçalhos e enviar resposta
-		w.Header().Set("Content-Type", "text/plain")
-		w.Write([]byte(encryptedData))
-	} else {
-		// Enviar JSON sem criptografia
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(jsonData)
-	}
-}
-
 // Handler para informações de rede
 func redeHandler(w http.ResponseWriter, r *http.Request) {
 	// Obter informações atualizadas de rede
-	redeInfo := getNetworkInfo()
+	redeInfo := getNetworkInfoSyscall()
 
 	// Converter para JSON
 	jsonData, err := json.MarshalIndent(redeInfo, "", "  ")
@@ -587,7 +554,7 @@ func redeHandler(w http.ResponseWriter, r *http.Request) {
 // Handler para informações do sistema
 func sistemaHandler(w http.ResponseWriter, r *http.Request) {
 	// Obter informações do sistema em tempo real, sem usar cache
-	sistemaInfo := getSystemInfo()
+	sistemaInfo := getSystemInfoSyscall()
 
 	// Converter para JSON
 	jsonData, err := json.MarshalIndent(sistemaInfo, "", "  ")

@@ -70,7 +70,6 @@ func createTables(db *sql.DB) error {
 			os_name TEXT,
 			cpu_model TEXT,
 			ram_total INTEGER,
-			disk_c_total REAL,
 			agent_version TEXT,
 			servidor_atualizacao TEXT,
 			system_info_update_interval INTEGER,
@@ -156,7 +155,7 @@ func saveComputerInfo(info map[string]interface{}, ip string) error {
 
 	// Extrair outros dados
 	var hostname, osName, cpuModel, agentVersion, servidorAtualizacao string
-	var ramTotal, diskCTotal float64
+	var ramTotal float64
 	var systemInfoUpdateInterval, updateCheckInterval int
 
 	// Extrair hostname
@@ -180,23 +179,6 @@ func saveComputerInfo(info map[string]interface{}, ip string) error {
 	if memoria, ok := info["memoria"].(map[string]interface{}); ok {
 		if total, ok := memoria["total"].(float64); ok {
 			ramTotal = total
-		}
-	}
-
-	// Extrair disco C
-	if discos, ok := info["discos"].([]interface{}); ok && len(discos) > 0 {
-		for _, d := range discos {
-			disco, ok := d.(map[string]interface{})
-			if !ok {
-				continue
-			}
-
-			if dispositivo, ok := disco["dispositivo"].(string); ok && dispositivo == "C:" {
-				if total, ok := disco["total_gb"].(float64); ok {
-					diskCTotal = total
-				}
-				break
-			}
 		}
 	}
 
@@ -275,10 +257,10 @@ func saveComputerInfo(info map[string]interface{}, ip string) error {
 		_, err = tx.Exec(`
 			UPDATE computers 
 			SET hostname = ?, ip_address = ?, os_name = ?, cpu_model = ?, 
-				ram_total = ?, disk_c_total = ?, agent_version = ?, last_seen = ?,
+				ram_total = ?, agent_version = ?, last_seen = ?,
 				servidor_atualizacao = ?, system_info_update_interval = ?, update_check_interval = ?
 			WHERE mac_address = ?
-		`, hostname, ip, osName, cpuModel, ramTotal, diskCTotal, agentVersion, now,
+		`, hostname, ip, osName, cpuModel, ramTotal, agentVersion, now,
 			servidorAtualizacao, systemInfoUpdateInterval, updateCheckInterval, macAddress)
 		if err != nil {
 			return fmt.Errorf("erro ao atualizar computador: %v", err)
@@ -287,11 +269,11 @@ func saveComputerInfo(info map[string]interface{}, ip string) error {
 		// Inserir novo registro
 		_, err = tx.Exec(`
 			INSERT INTO computers 
-			(mac_address, hostname, ip_address, os_name, cpu_model, ram_total, disk_c_total, 
+			(mac_address, hostname, ip_address, os_name, cpu_model, ram_total,  
 			 agent_version, last_seen, first_seen, servidor_atualizacao, 
 			 system_info_update_interval, update_check_interval)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-		`, macAddress, hostname, ip, osName, cpuModel, ramTotal, diskCTotal,
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		`, macAddress, hostname, ip, osName, cpuModel, ramTotal,
 			agentVersion, now, now, servidorAtualizacao, systemInfoUpdateInterval, updateCheckInterval)
 		if err != nil {
 			return fmt.Errorf("erro ao inserir computador: %v", err)
@@ -344,7 +326,7 @@ func saveComputerInfo(info map[string]interface{}, ip string) error {
 func getAllComputers() ([]map[string]interface{}, error) {
 	rows, err := db.Query(`
 		SELECT mac_address, hostname, ip_address, os_name, cpu_model, 
-			   ram_total, disk_c_total, agent_version, last_seen, first_seen,
+			   ram_total, agent_version, last_seen, first_seen,
 			   servidor_atualizacao, system_info_update_interval, update_check_interval
 		FROM computers
 		ORDER BY hostname
@@ -357,11 +339,11 @@ func getAllComputers() ([]map[string]interface{}, error) {
 	var computers []map[string]interface{}
 	for rows.Next() {
 		var mac, hostname, ip, os, cpu, agentVersion, servidorAtualizacao string
-		var ram, disk float64
+		var ramTotal float64
 		var lastSeen, firstSeen time.Time
 		var systemInfoUpdateInterval, updateCheckInterval int
 
-		err := rows.Scan(&mac, &hostname, &ip, &os, &cpu, &ram, &disk, &agentVersion,
+		err := rows.Scan(&mac, &hostname, &ip, &os, &cpu, &ramTotal, &agentVersion,
 			&lastSeen, &firstSeen, &servidorAtualizacao, &systemInfoUpdateInterval, &updateCheckInterval)
 		if err != nil {
 			return nil, fmt.Errorf("erro ao ler dados do computador: %v", err)
@@ -373,8 +355,7 @@ func getAllComputers() ([]map[string]interface{}, error) {
 			"ip_address":                  ip,
 			"os_name":                     os,
 			"cpu_model":                   cpu,
-			"ram_total":                   ram,
-			"disk_c_total":                disk,
+			"ram_total":                   ramTotal,
 			"agent_version":               agentVersion,
 			"last_seen":                   lastSeen.Format("2006-01-02 15:04:05"),
 			"first_seen":                  firstSeen.Format("2006-01-02 15:04:05"),

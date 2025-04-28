@@ -47,7 +47,6 @@ func initHTTPServer(port int) {
 	mux.HandleFunc("/gpu", corsMiddleware(gpuHandler))
 	mux.HandleFunc("/hardware", corsMiddleware(hardwareHandler))
 	mux.HandleFunc("/memoria", corsMiddleware(memoriaHandler))
-	mux.HandleFunc("/processos", corsMiddleware(processosHandler))
 	mux.HandleFunc("/rede", corsMiddleware(redeHandler))
 	mux.HandleFunc("/sistema", corsMiddleware(sistemaHandler))
 	mux.HandleFunc("/agente", corsMiddleware(agenteHandler))
