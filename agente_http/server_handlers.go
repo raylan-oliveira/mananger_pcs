@@ -700,3 +700,59 @@ func agenteHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write(jsonData)
 	}
 }
+
+// Handler para fornecer informações do sistema via syscall
+func syscallInfoHandler(w http.ResponseWriter, r *http.Request) {
+	// Coletar informações do sistema usando syscalls diretos
+	info := getAllSyscallInfo()
+
+	// Converter para JSON
+	jsonData, err := json.MarshalIndent(info, "", "  ")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Erro ao serializar dados: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Verificar se a resposta deve ser criptografada
+	encryptParam := r.URL.Query().Get("encrypt")
+	shouldEncrypt := encriptado || encryptParam == "true"
+
+	if shouldEncrypt {
+		// Criptografar os dados
+		exePath, err := os.Executable()
+		if err != nil {
+			errMsg := fmt.Sprintf("Erro ao obter caminho do executável: %v", err)
+			fmt.Println(errMsg)
+			http.Error(w, errMsg, http.StatusInternalServerError)
+			return
+		}
+
+		exeDir := filepath.Dir(exePath)
+		keysDir := filepath.Join(exeDir, "keys")
+		publicKeyPath := filepath.Join(keysDir, "public_key.pem")
+
+		if _, err := os.Stat(publicKeyPath); os.IsNotExist(err) {
+			errMsg := fmt.Sprintf("Chave pública não encontrada em %s", publicKeyPath)
+			fmt.Println(errMsg)
+			http.Error(w, errMsg, http.StatusInternalServerError)
+			return
+		}
+
+		// Criptografar os dados
+		encryptedData, err := encryptWithPublicKey(jsonData)
+		if err != nil {
+			errMsg := fmt.Sprintf("Erro ao criptografar dados: %v", err)
+			fmt.Println(errMsg)
+			http.Error(w, errMsg, http.StatusInternalServerError)
+			return
+		}
+
+		// Definir cabeçalhos e enviar resposta
+		w.Header().Set("Content-Type", "text/plain")
+		w.Write([]byte(encryptedData))
+	} else {
+		// Enviar JSON sem criptografia
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(jsonData)
+	}
+}

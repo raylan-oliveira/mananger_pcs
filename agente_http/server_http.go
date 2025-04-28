@@ -38,6 +38,7 @@ func initHTTPServer(port int) {
 	// Registrar handlers com middleware CORS
 	mux.HandleFunc("/", corsMiddleware(quickSystemInfoHandlerDataBase))
 	mux.HandleFunc("/info-all", corsMiddleware(systemInfoAllCalcHandler))
+	mux.HandleFunc("/syscall-info", corsMiddleware(syscallInfoHandler))
 	mux.HandleFunc("/update-server", corsMiddleware(updateServerIPHandler))
 	mux.HandleFunc("/update-system-info-interval", corsMiddleware(updateSystemInfoIntervalHandler))
 	mux.HandleFunc("/update-check-interval", corsMiddleware(updateCheckIntervalHandler))

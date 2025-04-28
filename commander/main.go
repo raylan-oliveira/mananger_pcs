@@ -13,6 +13,7 @@ func main() {
 	// Configurar flags de linha de comando
 	agentIP := flag.String("agent", "", "IP do agente para atualizar (ex: 192.168.1.100:9999 or 192.168.1.100 or 'all' para todos os agentes)")
 	getInfo := flag.String("info", "", "Obter informações detalhadas do agente. Opções: tudo, cpu, discos, gpu, hardware, memoria, processos, rede, sistema, agente, info-all")
+	getSyscall := flag.Bool("syscall", false, "Obter informações do sistema via syscall direto")
 	updateIP := flag.String("update-ip", "", "Atualizar o IP do servidor de atualização")
 	sysInfoInterval := flag.Int("sys-interval", 0, "Atualizar intervalo de coleta de informações do sistema (em minutos)")
 	updateInterval := flag.Int("update-interval", 0, "Atualizar intervalo de verificação de atualizações (em minutos)")
@@ -175,6 +176,27 @@ func main() {
 		}
 
 		log.Printf("Intervalo de verificação de atualizações atualizado para %d minutos no agente %s", *updateInterval, *agentIP)
+		return
+	}
+
+	// Verificar se é para obter informações via syscall
+	if *agentIP != "" && *getSyscall {
+		if privateKey == nil {
+			log.Fatalf("Erro: Chave privada necessária para obter informações criptografadas")
+		}
+
+		log.Printf("Consultando informações via syscall do agente em %s...", *agentIP)
+		info, err := getSyscallInfo(*agentIP, *timeout)
+		if err != nil {
+			log.Fatalf("Erro ao obter informações via syscall do agente: %v", err)
+		}
+
+		// Exibir o JSON formatado
+		jsonData, err := json.MarshalIndent(info, "", "  ")
+		if err != nil {
+			log.Fatalf("Erro ao formatar JSON: %v", err)
+		}
+		fmt.Println(string(jsonData))
 		return
 	}
 

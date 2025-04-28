@@ -402,3 +402,56 @@ func executeCommand(agentIP, command string, isPowerShell bool) (map[string]inte
 
 	return result, nil
 }
+
+// getSyscallInfo obtém informações do sistema via syscall direto de um agente
+func getSyscallInfo(agentIP string, timeout int) (map[string]interface{}, error) {
+	// Verificar se o agentIP inclui a porta
+	if !strings.Contains(agentIP, ":") {
+		agentIP = agentIP + ":9999" // Porta padrão do agente
+	}
+
+	// Configurar cliente HTTP com timeout
+	client := &http.Client{
+		Timeout: time.Duration(timeout) * time.Second,
+	}
+
+	// Construir a URL para o endpoint syscall-info
+	url := fmt.Sprintf("http://%s/syscall-info?encrypt=true", agentIP)
+
+	// Solicitar dados
+	resp, err := client.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("erro ao conectar com o agente: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Verificar o código de status
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("agente retornou código %d: %s", resp.StatusCode, string(bodyBytes))
+	}
+
+	// Ler o corpo da resposta
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("erro ao ler resposta: %v", err)
+	}
+
+	// Verificar se a resposta está criptografada
+	var result map[string]interface{}
+
+	// Tentar decodificar como JSON primeiro
+	err = json.Unmarshal(body, &result)
+	if err == nil {
+		// Resposta já está em formato JSON
+		return result, nil
+	}
+
+	// Tentar descriptografar a resposta
+	decryptedData, err := decryptData(body)
+	if err != nil {
+		return nil, fmt.Errorf("erro ao processar resposta: %v", err)
+	}
+
+	return decryptedData, nil
+}
